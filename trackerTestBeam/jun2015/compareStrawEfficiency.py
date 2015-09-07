@@ -12,29 +12,60 @@ efficiencyScanFiles[0.5] = inputRootDir + 'strawEff50/' + inputFileName
 efficiencyScanFiles[0.75] = inputRootDir + 'strawEff75/' + inputFileName
 efficiencyScanFiles[1.] = inputRootDir + 'strawEff100/' + inputFileName
 
-#Create canvas
+#Open all files (keep them in dict so have them in memory simultaneously)
+rootFiles = dict()
+for efficiency, rootFileName in efficiencyScanFiles.iteritems() :
+  rootFiles[efficiency] = rh.openFile(rootFileName)
+
+
+#
+# Num digits in island histo
+#
+
+#Create a fresh canvas
 canvas = TCanvas()
 canvas.Divide(2,2)
 #gStyle.SetOptStat(False)
 
-#Loop over files (keep them in list so have them in memory simultaneously)
-rootFiles = list()
+#Loop over files
 counter = 0
-for efficiency, rootFileName in efficiencyScanFiles.iteritems() :
+for efficiency, rootFile in rootFiles.iteritems() :
 
-  #Open file and get histogram
-  rootFiles.append( rh.openFile(rootFileName) )
-  hist = rh.getFromFile(rootFiles[-1],'StrawEfficiency/Islands/h_numDigitsInIsland')
-
+  #Get histogram
+  hist = rh.getFromFile(rootFile,'StrawEfficiency/h_numDigitsInIsland')
   counter += 1
 
   #Format histo
   hist.SetTitle('Efficiency = '+str(efficiency)+';Num digits in island;')
 
-  ##Draw to cnavas
+  #Draw to canvas
   canvas.cd(counter)
   hist.Draw()
 
 raw_input("Press Enter to continue...")
 
 
+#
+# Num seeds in island histo
+#
+
+#Create a fresh canvas
+canvas = TCanvas()
+canvas.Divide(2,2)
+
+#Loop over files
+counter = 0
+for efficiency, rootFile in rootFiles.iteritems() :
+
+  #Get histogram
+  hist = rh.getFromFile(rootFile,'StrawEfficiency/h_numSeedsFormedFromIsland')
+  counter += 1
+
+  #Format histo
+  hist.SetTitle('Efficiency = '+str(efficiency)+';Num seeds formed from island;')
+
+  #Draw to canvas
+  canvas.cd(counter)
+  hist.Draw()
+
+raw_input("Press Enter to continue...")
