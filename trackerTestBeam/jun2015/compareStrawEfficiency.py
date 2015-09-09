@@ -2,18 +2,19 @@ from ROOT import TFile, TCanvas, gStyle, TH1F
 import os
 import argparse
 import RootHelper as rh
+from collections import OrderedDict
 
 #Define files to read
 inputRootDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/sim/'
 inputFileName = 'mtestRecoAnalysis_strawEfficiencyPlots.root'
-efficiencyScanFiles = dict()
+efficiencyScanFiles = OrderedDict()
 efficiencyScanFiles[0.25] = inputRootDir + 'strawEff25/' + inputFileName
 efficiencyScanFiles[0.5] = inputRootDir + 'strawEff50/' + inputFileName
 efficiencyScanFiles[0.75] = inputRootDir + 'strawEff75/' + inputFileName
 efficiencyScanFiles[1.] = inputRootDir + 'strawEff100/' + inputFileName
 
 #Open all files (keep them in dict so have them in memory simultaneously)
-rootFiles = dict()
+rootFiles = OrderedDict()
 for efficiency, rootFileName in efficiencyScanFiles.iteritems() :
   rootFiles[efficiency] = rh.openFile(rootFileName)
 
