@@ -8,8 +8,8 @@ from collections import OrderedDict
 inputRootDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/'
 inputFileName = 'mtestDigitsAnalysis_strawTriggerDigitPlots.root'
 inputFiles = OrderedDict()
-inputFiles['Ar-CO2 : Run 316'] = inputRootDir + 'run00316/' + inputFileName
-inputFiles['Ar-Ethane : Run 405'] = inputRootDir + 'run00405/' + inputFileName
+inputFiles['Ar-CO2 : Run 316'] = inputRootDir + 'run00316/deadTime150ns/' + inputFileName
+inputFiles['Ar-Ethane : Run 405'] = inputRootDir + 'run00405/deadTime150ns/' + inputFileName
 
 #Open all files (keep them in dict so have them in memory simultaneously)
 rootFiles = OrderedDict()

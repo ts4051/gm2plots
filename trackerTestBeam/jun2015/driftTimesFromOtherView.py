@@ -5,7 +5,7 @@ import argparse
 
 #Create parser
 parser = argparse.ArgumentParser(description='')
-parser.add_argument('-i','--input-root-file', type=str, required=True, help='Inpot ROOT file', dest='inputFile')
+parser.add_argument('-i','--input-root-file', type=str, required=True, help='Input ROOT file', dest='inputFile')
 #parser.add_argument('-o','--output-root-file', type=str, required=True, help='Output ROOT file', dest='onputFile')
 args = parser.parse_args()
 print 'Arguments provided :',args

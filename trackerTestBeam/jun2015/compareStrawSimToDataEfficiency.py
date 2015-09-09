@@ -9,8 +9,8 @@ inputRootDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/d
 inputFileName = 'mtestRecoAnalysis_strawEfficiencyPlots.root'
 efficiencyScanFiles = OrderedDict()
 inputFiles = OrderedDict()
-inputFiles['Ar-CO2 : Run 316'] = inputRootDir + 'run00316/deadTime150ns/' + inputFileName
-inputFiles['Ar-Ethane : Run 405'] = inputRootDir + 'run00405/deadTime150ns/' + inputFileName
+inputFiles['Sim : 40% efficiency : 35% MO'] = inputRootDir + '/sim/strawEff40/MO-60-30-8-2/' + inputFileName
+inputFiles['Ar-Ethane : Run 405'] = inputRootDir + '/run00405/deadTime150ns/' + inputFileName
 
 #Open all files (keep them in dict so have them in memory simultaneously)
 rootFiles = OrderedDict()
