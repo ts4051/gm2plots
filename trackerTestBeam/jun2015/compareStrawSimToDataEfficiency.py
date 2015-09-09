@@ -15,6 +15,7 @@ inputFiles['Ar-Ethane : Run 405'] = inputRootDir + '/run00405/deadTime150ns/' + 
 #Open all files (keep them in dict so have them in memory simultaneously)
 rootFiles = OrderedDict()
 for key, rootFileName in inputFiles.iteritems() :
+  print key,':',rootFileName
   rootFiles[key] = rh.openFile(rootFileName)
 
 

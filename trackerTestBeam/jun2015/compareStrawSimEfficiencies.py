@@ -16,6 +16,7 @@ efficiencyScanFiles[1.] = inputRootDir + 'strawEff100/' + inputFileName
 #Open all files (keep them in dict so have them in memory simultaneously)
 rootFiles = OrderedDict()
 for efficiency, rootFileName in efficiencyScanFiles.iteritems() :
+  print efficiency,':',rootFileName
   rootFiles[efficiency] = rh.openFile(rootFileName)
 
 
