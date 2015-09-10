@@ -38,6 +38,7 @@ for key, rootFile in rootFiles.items() :
 
   #Format histo
   hist.SetTitle(key+';Hit time difference [ns];')
+  #hist.GetXaxis().SetRangeUser(-100.,100.)
 
   #Draw to canvas
   canvas.cd(counter)
