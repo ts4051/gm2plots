@@ -12,8 +12,8 @@ inputFiles = OrderedDict()
 inputFiles[200.] = inputRootDir + 'run00402/deadTime150ns/' + inputFileName
 inputFiles[300.] = inputRootDir + 'run00404/deadTime150ns/' + inputFileName
 inputFiles[400.] = inputRootDir + 'run00405/deadTime150ns/' + inputFileName
-#inputFiles[500.] = inputRootDir + 'run00407/deadTime150ns/' + inputFileName #TODO
-#inputFiles[700.] = inputRootDir + 'run00409/deadTime150ns/' + inputFileName #TODO
+inputFiles[600.] = inputRootDir + 'run00407/deadTime150ns/' + inputFileName
+inputFiles[700.] = inputRootDir + 'run00409/deadTime150ns/' + inputFileName
 
 #Open all files (keep them in dict so have them in memory simultaneously)
 rootFiles = OrderedDict()
@@ -28,7 +28,7 @@ for threshold, rootFileName in inputFiles.iteritems() :
 
 #Create a fresh canvas
 canvas = TCanvas()
-canvas.Divide(2,2)
+canvas.Divide(3,2)
 #gStyle.SetOptStat(False)
 
 #Loop over files
