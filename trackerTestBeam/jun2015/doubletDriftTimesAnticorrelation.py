@@ -58,7 +58,7 @@ raw_input("Press Enter to continue...")
 grCut = rh.getFromFile(rootFile,rootDirName+cutGraphName)
 
 #Fit it
-linFitCut = TF1("linFitCut", "[0] + [1]*x", -10., 60.)
+linFitCut = TF1("linFitCut", "[0] + [1]*x", 10., 40.)
 linFitCut.SetParameters(50., -1)
 grCut.Fit("linFitCut","R") #R enforces range of TF1 for fit
 interceptCut = linFitCut.GetParameter(0)
