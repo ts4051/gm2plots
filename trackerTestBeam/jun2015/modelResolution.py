@@ -55,7 +55,8 @@ def gaussian_fit(x,A,mu,sigma):
 parser = argparse.ArgumentParser(description='Produce simple u,v drift time correlation with resolution')
 parser.add_argument('--res', action='store', dest='resolution' , type=float , default = -1., help='Set straw resolution in microns')
 parser.add_argument('--nev', action='store', dest='nevents' , type=int , default = -1, help='Num hits to generate')
-parser.add_argument('--bg', action='store', dest='bgfrac' , type=float , default = -1., help='Signa / background fraction')
+parser.add_argument('--bg', action='store', dest='bgfrac' , type=float , default = -1., help='Signal / background fraction')
+parser.add_argument('--sumcut', action='store', dest='sumcut' , type=float , default = -1., help='Drift time sum cut')
 args = parser.parse_args()
 
 # Drift velocity: 50 microns per ns (is this true for ethane ?)
@@ -89,13 +90,22 @@ else:
     bgfrac = args.bgfrac
     print 'Signal / background fraction =',bgfrac
 
+if (args.sumcut == -1):
+    print "\nERROR: --sumcut must be set\n\n"
+    parser.print_help()
+    exit (-1)
+else:
+    sumcut = int(args.sumcut)
+
 # Resolution, smearing to add to hit time due to resolution    
 thit = resol/VD
 print 'Time resolution (from distance resolution) [ns] =',thit
 
+#finetime_smear = 0. #ns
 finetime_smear = 2.5 #ns
 print 'Fine time binning smearing [ns] =',finetime_smear
 
+#timesync_smear = 0. #ns
 timesync_smear = 2.5 #ns
 print 'Silicon/straw time sync smearing [ns] =',timesync_smear
 
@@ -104,29 +114,43 @@ hitv_smear = []
 
 # Generate hit pairs
 for i in xrange(0,nev,1):    
+
   hitu = uniform(0.0, 50.0)
   uhit = fixTime(gauss(hitu, thit)) #Resolution smear
   uhit = fixTime(gauss(uhit, finetime_smear)) #Fine time binning smear
   uhit = fixTime(gauss(uhit, timesync_smear)) #Time sync smear
-  hitu_smear.append(uhit)
+
   hitv = MAXD - hitu
   vhit = fixTime(gauss(hitv, thit)) #Resolution smear
   vhit = fixTime(gauss(vhit, finetime_smear)) #Fine time binning smear
   vhit = fixTime(gauss(vhit, timesync_smear)) #Time sync smear
-  hitv_smear.append (vhit)
-  #print (uhit,hitv)
+
+  #Only record hit if passes sum cut
+  if (MAXD-sumcut) <= (uhit+vhit) <= (MAXD+sumcut) : 
+    hitu_smear.append(uhit)
+    hitv_smear.append(vhit)
+    #print (uhit,hitv)
 
 # Generate uncorrelated background
-for i in xrange(0,int(nev*bgfrac),1):    
+for i in xrange(0,int(nev*bgfrac),1):  
+  
   hitu = uniform(0.0, 50.0)
   uhit = fixTime(gauss(hitu, finetime_smear)) #Fine time binning smear
   uhit = fixTime(gauss(uhit, timesync_smear)) #Time sync smear
-  hitu_smear.append(uhit)
+
   hitv = uniform(0.0, 50.0) #Uncorrelated
   vhit = fixTime(gauss(hitv, finetime_smear)) #Fine time binning smear
   vhit = fixTime(gauss(vhit, timesync_smear)) #Time sync smear
-  hitv_smear.append(vhit)
-  #print (uhit,hitv)
+
+  #Only record hit if passes sum cut
+  if (MAXD-sumcut) <= (uhit+vhit) <= (MAXD+sumcut) : 
+    hitu_smear.append(uhit)
+    hitv_smear.append(vhit)
+    #print (uhit,hitv)
+
+if len(hitu_smear)==0 :
+  print 'No data passed cuts'
+  exit(0)
 
 x = np.array(hitu_smear)  
 y = np.array(hitv_smear)  
@@ -138,7 +162,7 @@ fitIntercept = popt[0]
 print "Fit: gradient = %f, intercept = %f" % (fitGradient,fitIntercept)
 
 # Best fit line end points
-xFit = [-25.,75.]
+xFit = [-20.,70.]
 yFit = [ fitGradient*xFit[0]+fitIntercept , fitGradient*xFit[1]+fitIntercept ]
 
 #Plot
@@ -175,6 +199,4 @@ plt.plot(x,mlab.normpdf(x,mean,sigma),"r") #Plot bins
 plt.show()
 print "Residuals Mean = %f, Sigma = %f" % (mean,sigma)
 #
-
-
 
