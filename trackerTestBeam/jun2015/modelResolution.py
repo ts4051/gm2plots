@@ -7,7 +7,6 @@ from sys import argv,exit
 import datetime
 from math import log10,pow,sqrt,fabs
 from random import gauss,uniform
-from ml.root import histom
 import argparse
 
 def dca(start,end,point):
@@ -50,13 +49,17 @@ def fixTime(time):
 def straight_line_fit(z, a, b):
   return a + b*z
 
+def gaussian_fit(x,A,mu,sigma):
+    return A*np.exp(-(x-mu)**2/(2.*sigma**2))
+
 parser = argparse.ArgumentParser(description='Produce simple u,v drift time correlation with resolution')
-parser.add_argument('--res', action='store', dest='resolution' , default = -1, help='Set straw resolution in microns')
-parser.add_argument('--nev', action='store', dest='nevents' , default = -1, help='Num hits to generate')
+parser.add_argument('--res', action='store', dest='resolution' , type=float , default = -1., help='Set straw resolution in microns')
+parser.add_argument('--nev', action='store', dest='nevents' , type=int , default = -1, help='Num hits to generate')
+parser.add_argument('--bg', action='store', dest='bgfrac' , type=float , default = -1., help='Signa / background fraction')
 args = parser.parse_args()
 
 # Drift velocity: 50 microns per ns (is this true for ethane ?)
-TD = 50
+VD = 50
 # Maxium drift time : 50 ns
 MAXD = 50
 
@@ -66,6 +69,7 @@ if (args.resolution == -1):
     exit (-1)
 else:
     resol = int(args.resolution)
+    print 'Distance resolution [um] =',resol
 
 if (args.nevents == -1):
     print "\nERROR: --nev must be set\n\n"
@@ -74,8 +78,26 @@ if (args.nevents == -1):
 else:
     nev = int(args.nevents)
 
+if (args.bgfrac == -1.):
+    print "\nERROR: --bg must be set\n\n"
+    parser.print_help()
+    exit (-1)
+elif args.bgfrac<0. or args.bgfrac>1. :
+    print "\nERROR: --bg must be in range [0.,1.]\n\n"
+    exit (-1)
+else:
+    bgfrac = args.bgfrac
+    print 'Signal / background fraction =',bgfrac
+
 # Resolution, smearing to add to hit time due to resolution    
-thit = resol/TD
+thit = resol/VD
+print 'Time resolution (from distance resolution) [ns] =',thit
+
+finetime_smear = 2.5 #ns
+print 'Fine time binning smearing [ns] =',finetime_smear
+
+timesync_smear = 2.5 #ns
+print 'Silicon/straw time sync smearing [ns] =',timesync_smear
 
 hitu_smear = []
 hitv_smear = []
@@ -83,28 +105,50 @@ hitv_smear = []
 # Generate hit pairs
 for i in xrange(0,nev,1):    
   hitu = uniform(0.0, 50.0)
-  uhit = fixTime(gauss(hitu, thit)) 
+  uhit = fixTime(gauss(hitu, thit)) #Resolution smear
+  uhit = fixTime(gauss(uhit, finetime_smear)) #Fine time binning smear
+  uhit = fixTime(gauss(uhit, timesync_smear)) #Time sync smear
   hitu_smear.append(uhit)
   hitv = MAXD - hitu
-  vhit = fixTime(gauss(hitv, thit)) 
+  vhit = fixTime(gauss(hitv, thit)) #Resolution smear
+  vhit = fixTime(gauss(vhit, finetime_smear)) #Fine time binning smear
+  vhit = fixTime(gauss(vhit, timesync_smear)) #Time sync smear
   hitv_smear.append (vhit)
+  #print (uhit,hitv)
+
+# Generate uncorrelated background
+for i in xrange(0,int(nev*bgfrac),1):    
+  hitu = uniform(0.0, 50.0)
+  uhit = fixTime(gauss(hitu, finetime_smear)) #Fine time binning smear
+  uhit = fixTime(gauss(uhit, timesync_smear)) #Time sync smear
+  hitu_smear.append(uhit)
+  hitv = uniform(0.0, 50.0) #Uncorrelated
+  vhit = fixTime(gauss(hitv, finetime_smear)) #Fine time binning smear
+  vhit = fixTime(gauss(vhit, timesync_smear)) #Time sync smear
+  hitv_smear.append(vhit)
+  #print (uhit,hitv)
 
 x = np.array(hitu_smear)  
 y = np.array(hitv_smear)  
 
 # Fit these to a straight line
 popt, pcov = curve_fit(straight_line_fit, x, y)
-print "Fit: gradient = %f, intercept = %f \n" % (popt[1], popt[0])
+fitGradient = popt[1]
+fitIntercept = popt[0]
+print "Fit: gradient = %f, intercept = %f" % (fitGradient,fitIntercept)
 
-#plt.scatter(x,y,marker='o',c='blue')
-#plt.show()
+# Best fit line end points
+xFit = [-25.,75.]
+yFit = [ fitGradient*xFit[0]+fitIntercept , fitGradient*xFit[1]+fitIntercept ]
+
+#Plot
+plt.title('Drift times in doublet (layer0=x,layer1=y) [ns]')
+plt.scatter(x,y,marker='.',c='blue')
+plt.plot([xFit[0],yFit[0]],[xFit[1],yFit[1]],"r--")
+plt.show()
 
 # Loop over the hits and plot the residual (dca)
 residuals = []
-
-# Best fit line defined by these two points
-start = [-50,100]
-end  = [100,-50]
 
 for i in xrange(0,len(x)):
     xv = x[i]
@@ -113,24 +157,22 @@ for i in xrange(0,len(x)):
 
     try:
 # Residual from DCA        
-#      resid = dca(start,end,point)
-
-# Residual a la Tom
-# Predicted y
-      yp = popt[0] + xv*popt[1]
-      resid = yv - yp 
+      resid = dca((xFit[0],yFit[0]),(xFit[1],yFit[1]),point)
       residuals.append(resid)
     except ValueError as err:
       print(err.args)
     
-RPTS = np.array(residuals)
+#Plot the residuals
+RPTS = np.array(residuals) #Residuals
 mean = np.mean(RPTS)
 variance = np.var(RPTS)
 sigma = np.sqrt(variance)
-x = np.linspace(min(RPTS), max(RPTS),100)
-#plt.hist(RPTS)
-#plt.plot(x,mlab.normpdf(x,mean,sigma))
-#plt.show()
+print "Residuals Gaussian: mean = %f, variance = %f, sigma = %f" % (mean,variance,sigma) 
+x = np.linspace(min(RPTS), max(RPTS),100) #Bins
+plt.title('Time residuals [ns] (normalised)')
+plt.hist(RPTS, normed=True) #Must normalise histogram for Gaussian overlay
+plt.plot(x,mlab.normpdf(x,mean,sigma),"r") #Plot bins
+plt.show()
 print "Residuals Mean = %f, Sigma = %f" % (mean,sigma)
 #
 
