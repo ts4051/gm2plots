@@ -3,6 +3,7 @@ from sys import exit
 import os
 import argparse
 import RootHelper as rh
+import math
 
 #Create parser
 #parser = argparse.ArgumentParser(description='')
@@ -94,6 +95,18 @@ raw_input("Press Enter to continue...")
 # Doublet drift time residuals
 #
 
+#Function to get residuals
+def residual(m,c,x,y) :
+
+  #Convert from y=mx+c to more general ax+by+c=0 => a=m,b=-1
+  a = m
+  b = -1
+
+  #Calculate DCA
+  res = abs( a*x + b*y + c ) / math.sqrt( math.pow(a,2) + math.pow(b,2) )
+  return res
+
+
 #Book histo
 h_residuals = TH1F('h_residuals','Drift time residuals to fit [ns]', int(200/2.5), -100., 100.)
 h_residuals.GetXaxis().SetTitle('Drift time residual to fit [ns]')
@@ -107,13 +120,10 @@ for i in range(0, gr.GetN() ) :
   driftTime0 = Double(0)
   driftTime1 = Double(0)
   gr.GetPoint(i,driftTime0,driftTime1)
-  residual = driftTime1 - ( slope*driftTime0 + intercept );
-          
-  #Fill histo
-  h_residuals.Fill(residual)
+  h_residuals.Fill( residual(slope,intercept,driftTime0,driftTime1) )
 
 #Fit core
-h_residuals.Fit("gaus","","",-17.,20.)
+h_residuals.Fit("gaus","","",0.,100.)
 
 #Draw it
 h_residuals.Draw()
@@ -137,10 +147,7 @@ for i in range(0, gr.GetN() ) :
   driftTime0 = Double(0)
   driftTime1 = Double(0)
   gr.GetPoint(i,driftTime0,driftTime1)
-  residualToCutFit = driftTime1 - ( slopeCut*driftTime0 + interceptCut );
-          
-  #Fill histo
-  h_residualsUncutCutFit.Fill(residualToCutFit)
+  h_residualsUncutCutFit.Fill( residual(slopeCut,interceptCut,driftTime0,driftTime1) )
 
 #Draw it
 h_residualsUncutCutFit.Draw()
@@ -163,14 +170,11 @@ for i in range(0, grCut.GetN() ) :
   #Calculate residual
   driftTime0 = Double(0)
   driftTime1 = Double(0)
-  grCut.GetPoint(i,driftTime0,driftTime1)
-  residualToCutFit = driftTime1 - ( slopeCut*driftTime0 + interceptCut );
-          
-  #Fill histo
-  h_residualsCut.Fill(residualToCutFit)
+  grCut.GetPoint(i,driftTime0,driftTime1)         
+  h_residualsCut.Fill( residual(slopeCut,interceptCut,driftTime0,driftTime1) )
 
 #Fit core
-h_residualsCut.Fit("gaus","","",-17.,20.)
+h_residualsCut.Fit("gaus","","",0.,100.)
 
 #Draw it
 h_residualsCut.Draw()
