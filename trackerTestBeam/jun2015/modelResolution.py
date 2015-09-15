@@ -7,7 +7,6 @@ from sys import argv,exit
 import datetime
 from math import log10,pow,sqrt,fabs
 from random import gauss,uniform
-from ml.root import histom
 import argparse
 
 def dca(start,end,point):
@@ -50,6 +49,9 @@ def fixTime(time):
 def straight_line_fit(z, a, b):
   return a + b*z
 
+def gaussian_fit(x,A,mu,sigma):
+    return A*np.exp(-(x-mu)**2/(2.*sigma**2))
+
 parser = argparse.ArgumentParser(description='Produce simple u,v drift time correlation with resolution')
 parser.add_argument('--res', action='store', dest='resolution' , default = -1, help='Set straw resolution in microns')
 parser.add_argument('--nev', action='store', dest='nevents' , default = -1, help='Num hits to generate')
@@ -76,6 +78,7 @@ else:
 
 # Resolution, smearing to add to hit time due to resolution    
 thit = resol/TD
+print 'Time resolution (from distance resolution) =',thit
 
 hitu_smear = []
 hitv_smear = []
@@ -88,23 +91,29 @@ for i in xrange(0,nev,1):
   hitv = MAXD - hitu
   vhit = fixTime(gauss(hitv, thit)) 
   hitv_smear.append (vhit)
+  #print '[',uhit,',',vhit,']'
 
 x = np.array(hitu_smear)  
 y = np.array(hitv_smear)  
 
 # Fit these to a straight line
 popt, pcov = curve_fit(straight_line_fit, x, y)
-print "Fit: gradient = %f, intercept = %f \n" % (popt[1], popt[0])
+fitGradient = popt[1]
+fitIntercept = popt[0]
+print "Fit: gradient = %f, intercept = %f \n" % (fitGradient,fitIntercept)
 
-#plt.scatter(x,y,marker='o',c='blue')
-#plt.show()
+# Best fit line end points
+xFit = [-50.,100.]
+yFit = [ fitGradient*xFit[0]+fitIntercept , fitGradient*xFit[1]+fitIntercept ]
+
+#Plot
+plt.title('Drift times in doublet (layer0=x,layer1=y) [ns]')
+plt.scatter(x,y,marker='o',c='blue')
+plt.plot([xFit[0],yFit[0]],[xFit[1],yFit[1]],"r--")
+plt.show()
 
 # Loop over the hits and plot the residual (dca)
 residuals = []
-
-# Best fit line defined by these two points
-start = [-50,100]
-end  = [100,-50]
 
 for i in xrange(0,len(x)):
     xv = x[i]
@@ -113,12 +122,7 @@ for i in xrange(0,len(x)):
 
     try:
 # Residual from DCA        
-#      resid = dca(start,end,point)
-
-# Residual a la Tom
-# Predicted y
-      yp = popt[0] + xv*popt[1]
-      resid = yv - yp 
+      resid = dca((xFit[0],yFit[0]),(xFit[1],yFit[1]),point)
       residuals.append(resid)
     except ValueError as err:
       print(err.args)
@@ -128,9 +132,17 @@ mean = np.mean(RPTS)
 variance = np.var(RPTS)
 sigma = np.sqrt(variance)
 x = np.linspace(min(RPTS), max(RPTS),100)
-#plt.hist(RPTS)
-#plt.plot(x,mlab.normpdf(x,mean,sigma))
-#plt.show()
+plt.title('Time residuals [ns]')
+plt.hist(RPTS)
+
+#x = [0.5 * (data[1][i] + data[1][i+1]) for i in xrange(len(data[1])-1)]
+#y = data[0]
+
+#popt, pcov = curve_fit(gaussian_fit, RPTS, 1., 0., 10.) #Fit Gaussian to residuals
+#popt, pcov = curve_fit(gaussian_fit, h, RPTS)
+
+plt.plot(x,mlab.normpdf(x,mean,sigma))
+plt.show()
 print "Residuals Mean = %f, Sigma = %f" % (mean,sigma)
 #
 
