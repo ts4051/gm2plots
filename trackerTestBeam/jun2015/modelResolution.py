@@ -58,7 +58,7 @@ parser.add_argument('--nev', action='store', dest='nevents' , default = -1, help
 args = parser.parse_args()
 
 # Drift velocity: 50 microns per ns (is this true for ethane ?)
-TD = 50
+VD = 50
 # Maxium drift time : 50 ns
 MAXD = 50
 
@@ -77,7 +77,7 @@ else:
     nev = int(args.nevents)
 
 # Resolution, smearing to add to hit time due to resolution    
-thit = resol/TD
+thit = resol/VD
 print 'Time resolution (from distance resolution) =',thit
 
 hitu_smear = []
@@ -100,17 +100,17 @@ y = np.array(hitv_smear)
 popt, pcov = curve_fit(straight_line_fit, x, y)
 fitGradient = popt[1]
 fitIntercept = popt[0]
-print "Fit: gradient = %f, intercept = %f \n" % (fitGradient,fitIntercept)
+print "Fit: gradient = %f, intercept = %f" % (fitGradient,fitIntercept)
 
 # Best fit line end points
 xFit = [-50.,100.]
 yFit = [ fitGradient*xFit[0]+fitIntercept , fitGradient*xFit[1]+fitIntercept ]
 
 #Plot
-plt.title('Drift times in doublet (layer0=x,layer1=y) [ns]')
-plt.scatter(x,y,marker='o',c='blue')
-plt.plot([xFit[0],yFit[0]],[xFit[1],yFit[1]],"r--")
-plt.show()
+#plt.title('Drift times in doublet (layer0=x,layer1=y) [ns]')
+#plt.scatter(x,y,marker='o',c='blue')
+#plt.plot([xFit[0],yFit[0]],[xFit[1],yFit[1]],"r--")
+#plt.show()
 
 # Loop over the hits and plot the residual (dca)
 residuals = []
@@ -127,21 +127,16 @@ for i in xrange(0,len(x)):
     except ValueError as err:
       print(err.args)
     
-RPTS = np.array(residuals)
+#Plot the residuals
+RPTS = np.array(residuals) #Residuals
 mean = np.mean(RPTS)
 variance = np.var(RPTS)
 sigma = np.sqrt(variance)
-x = np.linspace(min(RPTS), max(RPTS),100)
-plt.title('Time residuals [ns]')
-plt.hist(RPTS)
-
-#x = [0.5 * (data[1][i] + data[1][i+1]) for i in xrange(len(data[1])-1)]
-#y = data[0]
-
-#popt, pcov = curve_fit(gaussian_fit, RPTS, 1., 0., 10.) #Fit Gaussian to residuals
-#popt, pcov = curve_fit(gaussian_fit, h, RPTS)
-
-plt.plot(x,mlab.normpdf(x,mean,sigma))
+print "Residuals Gaussian: mean = %f, variance = %f, sigma = %f" % (mean,variance,sigma) 
+x = np.linspace(min(RPTS), max(RPTS),100) #Bins
+plt.title('Time residuals [ns] (normalised)')
+plt.hist(RPTS, normed=True) #Must normalise histogram for Gaussian overlay
+plt.plot(x,mlab.normpdf(x,mean,sigma),"r") #Plot bins
 plt.show()
 print "Residuals Mean = %f, Sigma = %f" % (mean,sigma)
 #
