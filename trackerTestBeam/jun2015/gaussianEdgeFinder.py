@@ -19,7 +19,7 @@ for i_pt in range(0,numPoints) :
   h_gaussian.Fill(x)
 
 #Add noise
-numNoise = int(numPoints/10)
+numNoise = int(numPoints/1)
 for i_noise in range(0,numNoise) :
   x = rand.Uniform(-50.,50.)
   h_gaussian.Fill(x)
@@ -46,7 +46,8 @@ binContentRange = maxBinContent - minBinContent
 #print 'Bin content range = %f' % (binContentRange)
 
 #Option 1 : Sharpest region of rise
-recentGradients = deque(maxlen=3) #Last few gradients
+numRecentGradients = 3
+recentGradients = deque(maxlen=numRecentGradients) #Last few gradients
 recentGradientSums = OrderedDict() #Sum of last few gradients for each bin
 for i_bin in range(1,len(bins)) : #Start at second bin as need to compare to i-1
   binGradient = bins.values()[i_bin] - bins.values()[i_bin-1] #Ignoring "/ deltaX", as same for every bin
@@ -57,7 +58,8 @@ binCentersWithMaxLocalGradients = [k for k,v in recentGradientSums.items() if v=
 print 'Bin center(s) with highest rising gradient =',binCentersWithMaxLocalGradients
 
 #Option 2 : First region of consistent rise
-recentGradients = deque(maxlen=3) #Last few gradients
+numRecentGradients = 6
+recentGradients = deque([-1.]*numRecentGradients,maxlen=numRecentGradients) #Last few gradients (initilialized with -ve values)
 for i_bin in range(1,len(bins)) : #Start at second bin as need to compare to i-1
   binGradient = bins.values()[i_bin] - bins.values()[i_bin-1] #Ignoring "/ deltaX", as same for every bin
   recentGradients.append(binGradient)
