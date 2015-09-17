@@ -61,8 +61,8 @@ args = parser.parse_args()
 
 # Drift velocity: 50 microns per ns (is this true for ethane ?)
 VD = 50
-# Maxium drift time : 50 ns
-MAXD = 50
+# Maxium drift time (from drift velocity and radius)
+MAXD = 2500. / VD
 
 if (args.resolution == -1):
     print "\nERROR: --res must be set\n\n"
