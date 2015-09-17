@@ -42,8 +42,8 @@ def dca(start,end,point):
     return dcaV
 
 def fixTime(time):
-    if (time < 0):
-        time = fabs(time)
+    #if (time < 0): #TODO Do we want this?
+    #    time = fabs(time)
     return time
 
 def straight_line_fit(z, a, b):
@@ -111,6 +111,8 @@ print 'Silicon/straw time sync smearing [ns] =',timesync_smear
 
 hitu_smear = []
 hitv_smear = []
+hitu_cut = []
+hitv_cut = []
 
 # Generate hit pairs
 for i in xrange(0,nev,1):    
@@ -130,6 +132,9 @@ for i in xrange(0,nev,1):
     hitu_smear.append(uhit)
     hitv_smear.append(vhit)
     #print (uhit,hitv)
+  else:
+    hitu_cut.append(uhit) #Record cut hit positions too
+    hitv_cut.append(vhit)
 
 # Generate uncorrelated background
 for i in xrange(0,int(nev*bgfrac),1):  
@@ -147,6 +152,9 @@ for i in xrange(0,int(nev*bgfrac),1):
     hitu_smear.append(uhit)
     hitv_smear.append(vhit)
     #print (uhit,hitv)
+  else:
+    hitu_cut.append(uhit) #Record cut hit positions too
+    hitv_cut.append(vhit)
 
 if len(hitu_smear)==0 :
   print 'No data passed cuts'
@@ -154,6 +162,8 @@ if len(hitu_smear)==0 :
 
 x = np.array(hitu_smear)  
 y = np.array(hitv_smear)  
+xcut = np.array(hitu_cut)  
+ycut = np.array(hitv_cut)  
 
 # Fit these to a straight line
 popt, pcov = curve_fit(straight_line_fit, x, y)
@@ -168,8 +178,16 @@ yFit = [ fitGradient*xFit[0]+fitIntercept , fitGradient*xFit[1]+fitIntercept ]
 #Plot
 plt.title('Drift times in doublet (layer0=x,layer1=y) [ns]')
 plt.scatter(x,y,marker='.',c='blue')
-plt.plot([xFit[0],yFit[0]],[xFit[1],yFit[1]],"r--")
+plt.plot(xFit,yFit,"g-")
 plt.show()
+
+#Also plot with cut hits
+plt.title('Drift times in doublet (layer0=x,layer1=y) [ns]')
+plt.scatter(x,y,marker='o',c='blue')
+plt.scatter(xcut,ycut,marker='o',c='red')
+plt.plot(xFit,yFit,"g-")
+plt.show()
+
 
 # Loop over the hits and plot the residual (dca)
 residuals = []
@@ -198,5 +216,5 @@ plt.hist(RPTS, normed=True) #Must normalise histogram for Gaussian overlay
 plt.plot(x,mlab.normpdf(x,mean,sigma),"r") #Plot bins
 plt.show()
 print "Residuals Mean = %f, Sigma = %f" % (mean,sigma)
-#
+
 
