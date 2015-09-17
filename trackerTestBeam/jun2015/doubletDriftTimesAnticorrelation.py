@@ -12,7 +12,9 @@ import math
 
 #Inputs
 #rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/run00404/deadTime150ns/mtestDriftTimesFromOtherView.root'
-rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/run00402/deadTime150ns/tmp/mtestRecoAnalysis_siliconTriggersStraws.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/run00402/deadTime150ns/tmp/mtestRecoAnalysis_siliconTriggersStraws.root'
+rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/run00404/deadTime150ns/mtestRecoAnalysis_siliconTriggersStraws.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/run00316/deadTime150ns/mtestRecoAnalysis_siliconTriggersStraws.root'
 #rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/sim/idealCase_testSiT0/mtestRecoAnalysis_siliconTriggersStraws.root'
 #rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/sim/strawEff40/MO-60-30-8-2/mtestRecoAnalysis_siliconTriggersStraws.root'
 #rootDirName = 'UTriggersV'
@@ -24,6 +26,29 @@ cutGraphName = 'g_doubletDriftTimesCut'
 #Open input file
 rootFile = rh.openFile(rootFileName)
 
+
+
+#
+# Doublet drift time pairs profile
+#
+
+#Get drift time pair graph
+profile = rh.getFromFile(rootFile,rootDirName+"p_doubletDriftTimesCut")
+
+#Fit it
+profileFit = TF1("profileFit", "[0] + [1]*x", 15., 35.)
+profileFit.SetParameters(50., -1)
+profileFit.FixParameter(1,profileFit.GetParameter(1)) #Fix gradient
+profile.Fit("profileFit","R") #R enforces range of TF1 for fit
+profileIntercept = profileFit.GetParameter(0)
+profileSlope = profileFit.GetParameter(1)
+
+#Draw it
+profile.GetXaxis().SetRangeUser(-10.,60.)
+profile.Draw()
+raw_input("Press Enter to continue...")
+
+
 #
 # Doublet drift time pairs
 #
@@ -31,21 +56,25 @@ rootFile = rh.openFile(rootFileName)
 #Get drift time pair graph
 gr = rh.getFromFile(rootFile,rootDirName+graphName)
 
+'''
 #Fit it
 linFit = TF1("linFit", "[0] + [1]*x", -10., 60.)
 linFit.SetParameters(50., -1)
 gr.Fit("linFit","R") #R enforces range of TF1 for fit
 intercept = linFit.GetParameter(0)
 slope = linFit.GetParameter(1)
+'''
 
 #Draw it
 gr.SetTitle('Drift times in V layer doublet straw pairs (t0 from U layer doublet)')
 #gr.SetStats(False)
 gr.GetYaxis().SetTitleOffset(1.2)
-#gr.GetXaxis().SetRangeUser(-10.,60.)
-#gr.GetYaxis().SetRangeUser(-10.,60.)
+gr.GetXaxis().SetRangeUser(-10.,60.)
 gr.SetMarkerStyle(7)
+gr.GetXaxis().SetTitle("Drift time in straw (layer 0) [ns]")
+gr.GetYaxis().SetTitle("Drift time in straw (layer 1) [ns]")
 gr.Draw("AP")
+profileFit.Draw("same")
 raw_input("Press Enter to continue...")
 
 
@@ -57,25 +86,27 @@ raw_input("Press Enter to continue...")
 #Get drift time pair graph
 grCut = rh.getFromFile(rootFile,rootDirName+cutGraphName)
 
+'''
 #Fit it
 linFitCut = TF1("linFitCut", "[0] + [1]*x", 10., 40.)
 linFitCut.SetParameters(50., -1)
 grCut.Fit("linFitCut","R") #R enforces range of TF1 for fit
 interceptCut = linFitCut.GetParameter(0)
 slopeCut = linFitCut.GetParameter(1)
+'''
 
 #Draw it
 grCut.SetTitle('Drift times in V layer doublet straw pairs (t0 from U layer doublet) after cut')
-#gr.SetStats(False)
 grCut.GetYaxis().SetTitleOffset(1.2)
-#grCut.GetXaxis().SetRangeUser(-10.,60.)
-#grCut.GetYaxis().SetRangeUser(-10.,60.)
 grCut.SetMarkerStyle(7)
+grCut.GetXaxis().SetTitle("Drift time in straw (layer 0) [ns]")
+grCut.GetYaxis().SetTitle("Drift time in straw (layer 1) [ns]")
 grCut.Draw("AP")
+profileFit.Draw("same")
 raw_input("Press Enter to continue...")
 
 
-
+'''
 #
 # Doublet drift time pairs (uncut, but with fit to cut plot)
 #
@@ -88,8 +119,7 @@ gr.SetMarkerStyle(7)
 grUncutFitCut.Draw("AP")
 linFitCut.Draw("same")
 raw_input("Press Enter to continue...")
-
-
+'''
 
 #
 # Doublet drift time residuals
@@ -103,7 +133,12 @@ def residual(m,c,x,y) :
   b = -1
 
   #Calculate DCA
-  res = abs( a*x + b*y + c ) / math.sqrt( math.pow(a,2) + math.pow(b,2) )
+  dca = abs( a*x + b*y + c ) / math.sqrt( math.pow(a,2) + math.pow(b,2) )
+
+  #Get sign (+ve means above fit line)
+  sign = 1. if y > m*x+c else -1.
+
+  res = sign * dca
   return res
 
 
@@ -120,16 +155,17 @@ for i in range(0, gr.GetN() ) :
   driftTime0 = Double(0)
   driftTime1 = Double(0)
   gr.GetPoint(i,driftTime0,driftTime1)
-  h_residuals.Fill( residual(slope,intercept,driftTime0,driftTime1) )
+  h_residuals.Fill( residual(profileSlope,profileIntercept,driftTime0,driftTime1) )
 
 #Fit core
-h_residuals.Fit("gaus","","",0.,100.)
+h_residuals.Fit("gaus","","",-100.,100.)
 
 #Draw it
 h_residuals.Draw()
 raw_input("Press Enter to continue...")
 
 
+'''
 #
 # Doublet drift time residuals (cut fit on uncut data points)
 #
@@ -147,12 +183,12 @@ for i in range(0, gr.GetN() ) :
   driftTime0 = Double(0)
   driftTime1 = Double(0)
   gr.GetPoint(i,driftTime0,driftTime1)
-  h_residualsUncutCutFit.Fill( residual(slopeCut,interceptCut,driftTime0,driftTime1) )
+  h_residualsUncutCutFit.Fill( residual(profileSlope,profileIntercept,driftTime0,driftTime1) )
 
 #Draw it
 h_residualsUncutCutFit.Draw()
 raw_input("Press Enter to continue...")
-
+'''
 
 #
 # Doublet drift time residuals (cut fit on cut data points)
@@ -171,10 +207,10 @@ for i in range(0, grCut.GetN() ) :
   driftTime0 = Double(0)
   driftTime1 = Double(0)
   grCut.GetPoint(i,driftTime0,driftTime1)         
-  h_residualsCut.Fill( residual(slopeCut,interceptCut,driftTime0,driftTime1) )
+  h_residualsCut.Fill( residual(profileSlope,profileIntercept,driftTime0,driftTime1) )
 
 #Fit core
-h_residualsCut.Fit("gaus","","",0.,100.)
+h_residualsCut.Fit("gaus","","",-100.,100.)
 
 #Draw it
 h_residualsCut.Draw()
