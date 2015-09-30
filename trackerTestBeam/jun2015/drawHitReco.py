@@ -8,19 +8,47 @@ import datetime
 from math import log10,pow,sqrt,fabs
 from random import gauss,uniform
 import argparse
-
+import math
 
 #Helper functions
 def getLineY(x,m,c):
-  return m*x + c
+  y = m*x + c
+  return y
 
 def getLineX(y,m,c):
-  return (y-c)/m
+  x = (y-c)/m
+  return x
 
 def getLineEndsFromY(m,c,y1,y2):
   yVals = [y1,y2]
   xVals = [ getLineX(yVals[0],m,c) , getLineX(yVals[1],m,c) ]
   return xVals,yVals
+
+def getLineGradient(xVals,yVals):
+  m = ( yVals[1] - yVals[0] ) / ( xVals[1] - xVals[0] )
+  return m
+
+def getLineAngleFromGradient(m):
+  theta = math.atan(m) # m = tan(theta)
+  return theta
+
+def getLineIntercept(x,y,m):
+  c = y - m*x
+  return c
+
+def getPointOnRadiallyDisplacedLine(d,xVals,yVals): #d = radial displacement, [x,y] = point on original line
+  m = getLineGradient(xVals,yVals)
+  theta = getLineAngleFromGradient(m)
+  newX = (math.fabs(d)*math.sin(theta))
+  if d*newX < 0. : newX *= -1. #Sign correction
+  newX += xVals[0]
+  newY = (math.fabs(d)*math.cos(theta))
+  if d*newY < 0. : newY *= -1. #Sign correction
+  newY += yVals[0]
+  print "d = %f, m = %f, sin = %f, cos = %f" % (d,m,math.sin(theta),d*math.cos(theta))
+  print "Old [x,y] = [%f,%f]" % (xVals[0],yVals[0]) 
+  print "New [x,y] = [%f,%f]" % (newX,newY) 
+  return newX,newY,m
 
 
 #Init plot
@@ -44,6 +72,13 @@ plt.plot(wireV1X,wireV1Y,"b-")
 
 
 #Define straw isochrone lines (from gradient/intecepts)
+wireIsoUOXPoint,wireIsoUOYPoint,wireIsoGradientUO = getPointOnRadiallyDisplacedLine(1.84016,wireU0X,wireU0Y)
+wireIsoUOX,wireIsoUOY = getLineEndsFromY(wireIsoGradientUO, getLineIntercept(wireIsoUOXPoint,wireIsoUOYPoint,wireIsoGradientUO), -42.6321, 42.6321 )
+plt.plot(wireIsoUOX,wireIsoUOY,"r-.")
+
+wireIsoU1XPoint,wireIsoU1YPoint,wireIsoGradientU1 = getPointOnRadiallyDisplacedLine(-1.16392,wireU1X,wireU1Y)
+wireIsoU1X,wireIsoU1Y = getLineEndsFromY(wireIsoGradientU1, getLineIntercept(wireIsoU1XPoint,wireIsoU1YPoint,wireIsoGradientU1), -42.6321, 42.6321 )
+plt.plot(wireIsoU1X,wireIsoU1Y,"r-.")
 
 
 #Define straw corrected isochrone lines (from gradient/intecepts)
