@@ -111,7 +111,9 @@ for i in xrange(0,args.nevents,1):
       if args.verbose: print "Smearing (single straw) =",smearing
       smearingVals.append(smearing)
       smearedIntercept = truthIsochroneLine.c + (truthIsochroneLine.m*smearing) #Smear intercept
-      interceptSmearingVals.append( smearedIntercept - truthIsochroneLine.c ) #Record residuals
+      smearedInterceptResidual = smearedIntercept - truthIsochroneLine.c
+      if args.verbose: print "Smearing (doublet ioschrone line) =",smearedInterceptResidual
+      interceptSmearingVals.append( smearedInterceptResidual ) #Record residuals
       interceptSum += smearedIntercept
     interceptMean = interceptSum / 2.
 
