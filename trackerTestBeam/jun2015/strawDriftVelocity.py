@@ -22,20 +22,22 @@ rootFile = rh.openFile(rootFileName)
 #
 
 #Get drift time pair graph
-gr = rh.getFromFile(rootFile,'CompareTrackToStrawDoublets/g_trackToWireDCA_vs_driftDist')
+gr = rh.getFromFile(rootFile,'CompareTrackToStrawDoublets/g_trackToWireDCA_vs_driftTime')
 
 #Fit it
 fit = TF1("fit", "[0] + [1]*x", 0.5, 2.75)
-fit.SetParameters(1, 1.1) #Initial guesses
-fit.FixParameter(1,fit.GetParameter(1)) #Fix gradient
+fit.SetParameters(1, 1.) #Initial guesses
+#fit.FixParameter(1,fit.GetParameter(1)) #Fix gradient
 #fit.SetParLimits(1, 0.99, 1.01) #Limit gradient
 gr.Fit("fit","R") #R enforces range of TF1 for fit
 fitIntercept = fit.GetParameter(0)
 fitSlope = fit.GetParameter(1)
+driftVelocity = 1.e3 / fitSlope
+print "Drift velocity =",driftVelocity,"[um/ns]"
 
 #Draw it
 gr.GetXaxis().SetRangeUser(0.,3.)
-gr.GetYaxis().SetRangeUser(0.,3.)
+#gr.GetYaxis().SetRangeUser(0.,3.)
 gr.Draw("AP")
 raw_input("Press Enter to continue...")
 
