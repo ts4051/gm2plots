@@ -48,28 +48,15 @@ Main
 parser = argparse.ArgumentParser(description='Produce simple u,v drift time correlation with resolution')
 parser.add_argument('--res', action='store', dest='resolution' , type=float , default=-1., required=True, help='Set straw resolution in microns')
 parser.add_argument('--nev', action='store', dest='nevents' , type=int , default=-1, required=True, help='Num hits to generate')
-parser.add_argument('--plot', action='store_true', dest='plot')
+parser.add_argument('--draw', action='store_true', dest='drawEvents')
 parser.add_argument('--verbose', action='store_true', dest='verbose')
 args = parser.parse_args()
-
-# Drift velocity: 50 microns per ns (is this true for ethane ?)
-driftVelocity = 50
-
-# Resolution, smearing to add to hit time due to resolution    
-#timeResolution = args.resolution/driftVelocity
-#print 'Time resolution (from distance resolution) [ns] =',timeResolution
-
-#finetime_smear = 0. #ns
-#finetime_smear = 2.5 #ns
-#print 'Fine time binning smearing [ns] =',finetime_smear
 
 #Define geom
 strawAngle = 7.5 #deg
 strawGradient = 1. / math.tan( math.radians(strawAngle) )
 strawMinZ = -42.6321e3
 strawMaxZ = 42.6321e3
-
-
 
 #Generate events
 residuals = []
@@ -79,12 +66,12 @@ for i in xrange(0,args.nevents,1):
 
   if args.verbose: print '\nEvent',i
 
-  if args.plot: plt.title('Event %i : Truth vs reco hits (shows result of single straw resolution)' % (i) )
+  if args.drawEvents: plt.title('Event %i : Truth vs reco hits (shows result of single straw resolution)' % (i) )
 
   #Get hit pos (transverse)
   truthHitPos = Coord( y=gauss(0.,3.e3) , z=gauss(0.,3.e3) )
   if args.verbose: print "Truth hit pos =",truthHitPos
-  if args.plot: plt.scatter([truthHitPos.y],[truthHitPos.z],marker='o',c='blue')
+  if args.drawEvents: plt.scatter([truthHitPos.y],[truthHitPos.z],marker='o',c='blue')
 
   #Get truth ioschrone lines for each doublet from hit pos
   doubletTruthIsochroneLines = []
@@ -94,7 +81,7 @@ for i in xrange(0,args.nevents,1):
     truthIsochroneLine = Line( m=m , c=truthHitPos.z-(m*truthHitPos.y) )
     if args.verbose: print "Truth isochrone line =",truthIsochroneLine
     doubletTruthIsochroneLines.append( truthIsochroneLine )
-    if args.plot: #Draw it
+    if args.drawEvents: #Draw it
       lineYVals,lineZVals = getLineEndsFromZ(strawMinZ,strawMaxZ,truthIsochroneLine)
       plt.plot(lineYVals,lineZVals,"b--")
 
@@ -121,7 +108,7 @@ for i in xrange(0,args.nevents,1):
     smearedIsochroneLine = Line( m=truthIsochroneLine.m , c=interceptMean )
     if args.verbose: print "Smeared isochrone line =",smearedIsochroneLine
     doubletSmearedIsochroneLines.append( smearedIsochroneLine )
-    if args.plot: #Draw it
+    if args.drawEvents: #Draw it
       lineYVals,lineZVals = getLineEndsFromZ(strawMinZ,strawMaxZ,smearedIsochroneLine)
       plt.plot(lineYVals,lineZVals,"r--")
 
@@ -132,45 +119,52 @@ for i in xrange(0,args.nevents,1):
   zReco = ( doubletSmearedIsochroneLines[0].m * yReco ) + doubletSmearedIsochroneLines[0].c
   recoHitPos = Coord( y=yReco , z=zReco )
   if args.verbose: print "Reco hit pos =",recoHitPos
-  if args.plot: plt.scatter([recoHitPos.y],[recoHitPos.z],marker='o',c='red')
+  if args.drawEvents: plt.scatter([recoHitPos.y],[recoHitPos.z],marker='o',c='red')
 
   #Show isochrone lines and hit positons on a plot
-  if args.plot: plt.show()
+  if args.drawEvents: plt.show()
 
   #Get residuals
   residual = Coord( y=recoHitPos.y-truthHitPos.y , z=recoHitPos.z-truthHitPos.z )
   if args.verbose: print "Residual =",residual
   residuals.append(residual)
 
+#Create grid to add plots to
+figure, grid = plt.subplots(2,2)
+plt.suptitle('Straw resolution effect on hit reconstruction : Resolution = %f um' % (args.resolution) , fontsize=20)
+
 #Plot the single straw smearing
-n,bins,patches = plt.hist(np.array(smearingVals),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
+n,bins,patches = grid[0][0].hist(np.array(smearingVals),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
 (mu, sigma) = norm.fit(smearingVals) #Fit Gaussian
-plt.plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
-plt.title('Single straw smearing : mean=%f sigma=%f : [um]'%(mu,sigma))
-plt.show()
+grid[0][0].plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
+grid[0][0].set_title('Single straw smearing [um]\nmean=%f : sigma=%f'%(mu,sigma))
+#grid[0][0].set_xlabel('[um]',horizontalalignment='left')
 
 #Plot the intercept smearing
-n,bins,patches = plt.hist(np.array(interceptSmearingVals),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
+n,bins,patches = grid[0][1].hist(np.array(interceptSmearingVals),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
 (mu, sigma) = norm.fit(interceptSmearingVals) #Fit Gaussian
-plt.plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
-plt.title('Intercept smearing : mean=%f sigma=%f : [um]'%(mu,sigma))
-plt.show()
+grid[0][1].plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
+grid[0][1].set_title('Doublet isochrone intercept smearing [um]\nmean=%f : sigma=%f'%(mu,sigma))
+#grid[0][1].set_xlabel('[um]')
 
 #Plot the y residuals (with Gaussian fit)
 yResiduals = []  #Get list of y residuals
 for res in residuals : yResiduals.append(res.y)
-n,bins,patches = plt.hist(np.array(yResiduals),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
+n,bins,patches = grid[1][0].hist(np.array(yResiduals),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
 (mu, sigma) = norm.fit(yResiduals) #Fit Gaussian
-plt.plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
-plt.title('Fit y residuals : mean=%f sigma=%f : [um]'%(mu,sigma))
-plt.show()
+grid[1][0].plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
+grid[1][0].set_title('Fit y residuals [um]\nmean=%f : sigma=%f'%(mu,sigma))
+#grid[1][0].set_xlabel('[um]')
 
 #Plot the z residuals (with Gaussian fit)
 zResidualsUm = []  #Get list of z residuals
 for res in residuals : zResidualsUm.append(res.z)
-n,bins,patches = plt.hist(np.array(zResidualsUm),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
+n,bins,patches = grid[1][1].hist(np.array(zResidualsUm),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
 (mu, sigma) = norm.fit(zResidualsUm) #Fit Gaussian
-plt.plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
-plt.title('Fit z residuals : mean=%f sigma=%f : [um]'%(mu,sigma))
+grid[1][1].plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
+grid[1][1].set_title('Fit z residuals [um]\nmean=%f : sigma=%f'%(mu,sigma))
+#grid[1][1].set_xlabel('[um]')
+
+#Draw plot grid
 plt.show()
 
