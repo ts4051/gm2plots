@@ -47,11 +47,15 @@ def dca(start,end,point):
 
 
 def uniformSmear(val,smear) :
-  return uniform(val-(smear/2.),val+(smear/2.))
+  smearedVal = uniform(val-(smear/2.),val+(smear/2.))
+  #print "Uniform smear: Input value = %f, smeared value = %f, smear = %f" % (val,smearedVal,smear)
+  return smearedVal
 
 
 def gaussSmear(val,smear) :
-  return gauss(val,smear)
+  smearedVal = gauss(val,smear)
+  #print "Gaussian smear: Input value = %f, smeared value = %f, smear = %f" % (val,smearedVal,smear)
+  return smearedVal
 
 
 def fixTime(time):
