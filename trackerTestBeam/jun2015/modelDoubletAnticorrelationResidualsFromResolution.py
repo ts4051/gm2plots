@@ -9,6 +9,10 @@ from math import log10,pow,sqrt,fabs
 from random import gauss,uniform
 import argparse
 
+#
+# Helper functions
+#
+
 def dca(start,end,point):
 
     xDelta = end[0] - start[0]
@@ -41,16 +45,32 @@ def dca(start,end,point):
 
     return dcaV
 
+
+def uniformSmear(val,smear) :
+  return uniform(val-(smear/2.),val+(smear/2.))
+
+
+def gaussSmear(val,smear) :
+  return gauss(val,smear)
+
+
 def fixTime(time):
     #if (time < 0): #TODO Do we want this?
     #    time = fabs(time)
     return time
 
+
 def straight_line_fit(z, a, b):
   return a + b*z
 
+
 def gaussian_fit(x,A,mu,sigma):
     return A*np.exp(-(x-mu)**2/(2.*sigma**2))
+
+
+#
+# Main
+#
 
 parser = argparse.ArgumentParser(description='Produce simple u,v drift time correlation with resolution')
 parser.add_argument('--res', action='store', dest='resolution' , type=float , default = -1., help='Set straw resolution in microns')
@@ -103,10 +123,12 @@ else:
 thit = resol/driftVelocity
 print 'Time resolution (from distance resolution) [ns] =',thit
 
-finetime_smear = 0. #ns
-#finetime_smear = 2.5 #ns
+#Smear to compensate for fine time binning issue (uniform smear)
+#finetime_smear = 0. #ns
+finetime_smear = 2.5 #ns
 print 'Fine time binning smearing [ns] =',finetime_smear
 
+#Smear to compensate for uncertainty in silicon-straws time sync (gaussian smear)
 timesync_smear = 0. #ns
 #timesync_smear = 2.5 #ns
 print 'Silicon/straw time sync smearing [ns] =',timesync_smear
@@ -124,20 +146,20 @@ for i in xrange(0,nev,1):
 
   #Layer 0
   hitPosL0 = uniform(0.,strawRadius) #Generate hit DCA
-  hitPosL0Smeared = gauss(hitPosL0,resol) #Smear for resolution
+  hitPosL0Smeared = gaussSmear(hitPosL0,resol) #Smear for resolution
   singleStrawDriftDistResidualVals.append(hitPosL0Smeared-hitPosL0) 
   driftTimeL0 = hitPosL0Smeared / driftVelocity #Convert to time
-  driftTimeL0 = fixTime(gauss(driftTimeL0, finetime_smear)) #Fine time binning smear
-  driftTimeL0 = fixTime(gauss(driftTimeL0, timesync_smear)) #Time sync smear
+  driftTimeL0 = fixTime( uniformSmear(driftTimeL0,finetime_smear) ) #Fine time binning smear
+  driftTimeL0 = fixTime(gaussSmear(driftTimeL0, timesync_smear)) #Time sync smear
   singleStrawDriftTimeResidualVals.append(driftTimeL0-(hitPosL0/driftVelocity)) 
 
   #Layer 1
   hitPosL1 = strawRadius - hitPosL0 #Anticorrelated hit DCA
-  hitPosL1Smeared = gauss(hitPosL1,resol) #Smear for resolution
+  hitPosL1Smeared = gaussSmear(hitPosL1,resol) #Smear for resolution
   singleStrawDriftDistResidualVals.append(hitPosL1Smeared-hitPosL1) 
   driftTimeL1 = hitPosL1Smeared / driftVelocity #Convert to time
-  driftTimeL1 = fixTime(gauss(driftTimeL1, finetime_smear)) #Fine time binning smear
-  driftTimeL1 = fixTime(gauss(driftTimeL1, timesync_smear)) #Time sync smear
+  driftTimeL1 = fixTime( uniformSmear(driftTimeL1,finetime_smear) ) #Fine time binning smear
+  driftTimeL1 = fixTime(gaussSmear(driftTimeL1, timesync_smear)) #Time sync smear
   singleStrawDriftTimeResidualVals.append(driftTimeL1-(hitPosL1/driftVelocity)) 
 
   #Only record hit if passes sum cut
@@ -156,17 +178,17 @@ for i in xrange(0,int(nev*bgfrac),1):
   
   #Layer 0
   hitPosL0 = uniform(0.,strawRadius)
-  hitPosL0Smeared = gauss(hitPosL0,resol) #Smear for resolution
+  hitPosL0Smeared = gaussSmear(hitPosL0,resol) #Smear for resolution
   driftTimeL0 = hitPosL0Smeared / driftVelocity #Convert to time
-  driftTimeL0 = fixTime(gauss(driftTimeL0, finetime_smear)) #Fine time binning smear
-  driftTimeL0 = fixTime(gauss(driftTimeL0, timesync_smear)) #Time sync smear
+  driftTimeL0 = fixTime( uniformSmear(driftTimeL0,finetime_smear) ) #Fine time binning smear
+  driftTimeL0 = fixTime( gaussSmear(driftTimeL0, timesync_smear)) #Time sync smear
 
   #Layer 1
   hitPosL1 = uniform(0.,strawRadius) #Uncorrelated
-  hitPosL1Smeared = gauss(hitPosL1,resol) #Smear for resolution
+  hitPosL1Smeared = gaussSmear(hitPosL1,resol) #Smear for resolution
   driftTimeL1 = hitPosL1Smeared / driftVelocity #Convert to time
-  driftTimeL1 = fixTime(gauss(driftTimeL1, finetime_smear)) #Fine time binning smear
-  driftTimeL1 = fixTime(gauss(driftTimeL1, timesync_smear)) #Time sync smear
+  driftTimeL1 = fixTime( uniformSmear(driftTimeL1,finetime_smear) ) #Fine time binning smear
+  driftTimeL1 = fixTime(gaussSmear(driftTimeL1, timesync_smear)) #Time sync smear
 
   #Only record hit if passes sum cut
   driftTimeSum = driftTimeL0 + driftTimeL1
@@ -248,7 +270,7 @@ RPTS = np.array(residuals) #Residuals
 mean = np.mean(RPTS)
 variance = np.var(RPTS)
 sigma = np.sqrt(variance)
-print "Residuals Gaussian: mean = %f, variance = %f, sigma = %f" % (mean,variance,sigma) 
+print "Residuals Gaussian: mean = %f, sigma = %f [ns]" % (mean,sigma) 
 numBins = 100
 x = np.linspace(min(RPTS), max(RPTS),numBins) #Bins
 plt.title('Time residuals [ns] (normalised)')
@@ -258,12 +280,11 @@ plt.show()
 
 #Plot sum of drift times
 driftTimeSumVals = list()
-for i in range(0,len(driftTimeL0Vals)) :
-  driftTimeSumVals.append( driftTimeL0Vals[i] + driftTimeL1Vals[i] )
+for i in range(0,len(driftTimeL0Vals)) : driftTimeSumVals.append( driftTimeL0Vals[i] + driftTimeL1Vals[i] )
 mean = np.mean(driftTimeSumVals)
 variance = np.var(driftTimeSumVals)
 sigma = np.sqrt(variance)
-print "Drift time sum residuals: mean = %f, variance = %f, sigma = %f" % (mean,variance,sigma) 
+print "Drift time sum residuals: mean = %f, sigma = %f, single straw sigma = %f [ns]" % (mean,sigma,sigma/np.sqrt(2.)) 
 numBins = 100
 x = np.linspace(min(driftTimeSumVals), max(driftTimeSumVals),numBins) #Bins
 plt.title('Drift time sum residuals [ns] (normalised)')
