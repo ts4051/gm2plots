@@ -128,8 +128,8 @@ thit = resol/driftVelocity
 print 'Time resolution (from distance resolution) [ns] =',thit
 
 #Smear to compensate for fine time binning issue (uniform smear)
-#finetime_smear = 0. #ns
-finetime_smear = 2.5 #ns
+finetime_smear = 0. #ns
+#finetime_smear = 2.5 #ns
 print 'Fine time binning smearing [ns] =',finetime_smear
 
 #Smear to compensate for uncertainty in silicon-straws time sync (gaussian smear)
@@ -240,7 +240,7 @@ plt.show()
 mean = np.mean(singleStrawDriftDistResidualVals)
 variance = np.var(singleStrawDriftDistResidualVals)
 sigma = np.sqrt(variance)
-print "Mean = %f um , Sigma = %f um" % (mean,sigma)
+print "Drift distance residuals : Mean = %f um , Sigma = %f um" % (mean,sigma)
 plt.title('Single straw drift distance residuals [um] (normalised)')
 plt.hist(singleStrawDriftDistResidualVals, normed=True, bins=100)
 plt.show()
@@ -249,7 +249,7 @@ plt.show()
 mean = np.mean(singleStrawDriftTimeResidualVals)
 variance = np.var(singleStrawDriftTimeResidualVals)
 sigma = np.sqrt(variance)
-print "Mean = %f ns , Sigma = %f ns" % (mean,sigma)
+print "Drift time residuals : Mean = %f ns , Sigma = %f ns" % (mean,sigma)
 plt.title('Single straw drift time residuals [ns] (normalised)')
 plt.hist(singleStrawDriftTimeResidualVals, normed=True, bins=100)
 plt.show()
@@ -274,7 +274,7 @@ RPTS = np.array(residuals) #Residuals
 mean = np.mean(RPTS)
 variance = np.var(RPTS)
 sigma = np.sqrt(variance)
-print "Residuals Gaussian: mean = %f, sigma = %f [ns]" % (mean,sigma) 
+print "DCA to fit residuals : mean = %f, sigma = %f [ns]" % (mean,sigma) 
 numBins = 100
 x = np.linspace(min(RPTS), max(RPTS),numBins) #Bins
 plt.title('Time residuals [ns] (normalised)')
