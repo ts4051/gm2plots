@@ -6,14 +6,14 @@ import RootHelper as rh
 import math
 
 #Inputs
-#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc/mtestRecoAnalysis_compareSiliconTrackToStrawModuleRecoHit.root'
-#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc-Res_140um/mtestRecoAnalysis_compareSiliconTrackToStrawModuleRecoHit.root'
-#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc-Res_200um/mtestRecoAnalysis_compareSiliconTrackToStrawModuleRecoHit.root'
-#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5/mtestRecoAnalysis_compareSiliconTrackToStrawModuleRecoHit.root'
-#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5-Eff_80/mtestRecoAnalysis_compareSiliconTrackToStrawModuleRecoHit.root'
-#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5-Res_140um/mtestRecoAnalysis_compareTrackToStrawDoublets.root'
-rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/testbeam/run00402/mtestRecoAnalysis_compareSiliconTrackToStrawModuleRecoHit.root'
-#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/testbeam/run00404/mtestRecoAnalysis_compareSiliconTrackToStrawModuleRecoHit.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc/mtestRecoAnalysis_compareSiliconTrackToStraws.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc-Res_140um/mtestRecoAnalysis_compareSiliconTrackToStraws.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc-Res_200um/mtestRecoAnalysis_compareSiliconTrackToStraws.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5/mtestRecoAnalysis_compareSiliconTrackToStraws.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5-Eff_80/mtestRecoAnalysis_compareSiliconTrackToStraws.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5-Res_140um/mtestRecoAnalysis_compareSiliconTrackToStraws.root'
+rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/testbeam/run00402/mtestRecoAnalysis_compareSiliconTrackToStraws.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/testbeam/run00404/mtestRecoAnalysis_compareSiliconTrackToStraws.root'
 
 #Open input file
 rootFile = rh.openFile(rootFileName)
@@ -26,7 +26,7 @@ gStyle.SetOptStat(0)
 #
 
 #Get histo
-h_yResiduals = rh.getFromFile(rootFile,'CompareTrackToStrawModuleRecoHit/h_recoHitToTrackYResidual')
+h_yResiduals = rh.getFromFile(rootFile,'CompareTrackToStraws/StrawRecoHits/h_recoHitToTrackYResidual')
 
 #Fit core
 f_yResiduals = TF1("f_yResiduals", "gaus", -500., 500.);
@@ -54,7 +54,7 @@ raw_input("Press Enter to continue...")
 #
 
 #Get histo
-h_zResiduals = rh.getFromFile(rootFile,'CompareTrackToStrawModuleRecoHit/h_recoHitToTrackZResidual')
+h_zResiduals = rh.getFromFile(rootFile,'CompareTrackToStraws/StrawRecoHits/h_recoHitToTrackZResidual')
 
 #Fit core
 f_zResiduals = TF1("f_zResiduals", "gaus", -2000., 2000.);

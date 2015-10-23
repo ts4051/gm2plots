@@ -13,21 +13,21 @@ import math
 #Inputs
 #rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc/'
 #rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc-Res_140um/'
-rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc-Res_200um/'
+#rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc-Res_200um/'
 #rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5/'
 #rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5-Eff_80/'
 #rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5-Res_140um/'
 #rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5-Res_200um/'
 #rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5-Eff_80-Res_200um/'
 #rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/testbeam/run00316/'
-#rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/testbeam/run00402/'
+rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/testbeam/run00402/'
 #rootFileDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/testbeam/run00404/'
 
 #Plots
-#rootFileName = 'mtestRecoAnalysis_compareTrackToStrawDoublets.root'  #If using silicon for t0
+#rootFileName = 'mtestRecoAnalysis_compareSiliconTrackToStraws.root'  #If using silicon for t0
 rootFileName = 'mtestDriftTimesFromOtherView.root'  #If using one straw view to trigger the other
 rootFilePath = rootFileDir + "/" + rootFileName
-#graphName = 'CompareTrackToStrawDoublets/g_doubletDriftTimes'   #If using silicon for t0
+#graphName = 'CompareTrackToStraws/StrawDoublets/g_doubletDriftTimes'   #If using silicon for t0
 graphName = 'UTriggersV/g_doubletDriftTimes'   #If using one straw view to trigger the other
 
 #Open input file
