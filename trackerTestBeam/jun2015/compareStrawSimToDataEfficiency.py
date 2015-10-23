@@ -9,8 +9,19 @@ inputRootDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/d
 inputFileName = 'mtestRecoAnalysis_strawEfficiencyPlots.root'
 efficiencyScanFiles = OrderedDict()
 inputFiles = OrderedDict()
-inputFiles['Sim : 40% efficiency : 35% MO'] = inputRootDir + '/sim/strawEff40/MO-60-30-8-2/' + inputFileName
-inputFiles['Ar-Ethane : Run 405'] = inputRootDir + '/run00405/deadTime150ns/' + inputFileName
+#inputFiles['Sim : 100% efficiency : 0% MO'] = inputRootDir + '/sim/perfect_strawEff100_MO-0/' + inputFileName
+#inputFiles['Sim : 40% efficiency : 35% MO'] = inputRootDir + '/sim/strawEff40/MO-60-30-8-2/' + inputFileName
+inputFiles['Sim : 50% efficiency : 35% MO'] = inputRootDir + '/sim/strawEff50/tmp/' + inputFileName
+inputFiles['Ar-Ethane : Run 404'] = inputRootDir + '/run00404/deadTime150ns/' + inputFileName
+#inputFiles['Ar-Ethane : Run 405'] = inputRootDir + '/run00405/deadTime150ns/' + inputFileName
+
+#Also define normalisations (expected # protons per MTest spill after considering DAQ active time)
+numProtonsExpected = OrderedDict()
+#numProtonsExpected['Sim : 100% efficiency : 0% MO'] = 5000.
+#numProtonsExpected['Sim : 40% efficiency : 35% MO'] = 5000.
+numProtonsExpected['Sim : 50% efficiency : 35% MO'] = 5000.
+numProtonsExpected['Ar-Ethane : Run 404'] = 50000.
+#numProtonsExpected['Ar-Ethane : Run 405'] = 50000.
 
 #Open all files (keep them in dict so have them in memory simultaneously)
 rootFiles = OrderedDict()
@@ -88,9 +99,16 @@ for key, rootFile in rootFiles.items() :
   hist = rh.getFromFile(rootFile,'StrawEfficiency/h_summary')
   counter += 1
 
+  #Divide each bin by number of expected protons
+  for i_bin in range(1,hist.GetNbinsX()+1) : #Bin range starts at 1, not 0
+    newBinContent = hist.GetBinContent(i_bin) / numProtonsExpected[key]
+    hist.SetBinContent( i_bin, newBinContent )
+
   #Format histo
-  hist.SetTitle(key)
-  hist.GetYaxis().SetRangeUser(0.,200.e3)
+  hist.SetTitle(key+' : Bin contents experessed as fractions of expected # protons')
+  hist.GetYaxis().SetTitle('[Fraction of expected # protons]')
+  hist.GetYaxis().SetRangeUser(0.,4)
+  hist.GetYaxis().SetTitleOffset(1.4)
   hist.SetStats(False)
 
   #Draw to canvas

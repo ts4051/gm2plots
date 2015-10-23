@@ -5,11 +5,11 @@ import RootHelper as rh
 from collections import OrderedDict
 
 #Define files to read
-inputRootDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_merge/data/'
+inputRootDir = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/testbeam/'
 inputFileName = 'mtestDigitsAnalysis_strawTriggerDigitPlots.root'
 inputFiles = OrderedDict()
-inputFiles['Ar-CO2 : Run 316'] = inputRootDir + 'run00316/deadTime150ns/' + inputFileName
-inputFiles['Ar-Ethane : Run 405'] = inputRootDir + 'run00405/deadTime150ns/' + inputFileName
+inputFiles['Ar-CO2 : Run 316'] = inputRootDir + 'run00316/' + inputFileName
+inputFiles['Ar-Ethane : Run 402'] = inputRootDir + 'run00402/' + inputFileName
 
 #Open all files (keep them in dict so have them in memory simultaneously)
 rootFiles = OrderedDict()

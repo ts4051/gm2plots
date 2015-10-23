@@ -7,6 +7,7 @@ import math
 
 #Inputs
 #rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc/mtestRecoAnalysis_compareTrackToStrawDoublets.root'
+#rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc-Res_140um/mtestRecoAnalysis_compareTrackToStrawDoublets.root'
 #rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/singleOcc-Res_200um/mtestRecoAnalysis_compareTrackToStrawDoublets.root'
 #rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5/mtestRecoAnalysis_compareTrackToStrawDoublets.root'
 #rootFileName = '/unix/muons/g-2/scratch/tom/sim/gm2Dev_v6_01_00_testbeam_coordSystems/data/sim/MO_80_15_5-Eff_80/mtestRecoAnalysis_compareTrackToStrawDoublets.root'
@@ -24,10 +25,21 @@ rootFile = rh.openFile(rootFileName)
 #Get drift time pair graph
 gr = rh.getFromFile(rootFile,'CompareTrackToStrawDoublets/g_trackToWireDCA_vs_driftTime')
 
+#Draw it
+gr.SetTitle("Ar-Ethane 1800V 200mV")
+gr.GetXaxis().SetTitle("Track DCA to straw [mm]")
+gr.GetYaxis().SetTitle("Straw drift time [ns]")
+gr.GetXaxis().SetRangeUser(0.,2.5)
+gr.GetYaxis().SetRangeUser(0.,100.)
+gr.SetMarkerStyle(7)
+gr.Draw("AP")
+raw_input("Press Enter to continue...")
+
 #Fit it
-fit = TF1("fit", "[0] + [1]*x", 0.5, 2.75)
-fit.SetParameters(1, 1.) #Initial guesses
-#fit.FixParameter(1,fit.GetParameter(1)) #Fix gradient
+fit = TF1("fit", "[0] + [1]*x", 1., 2.)
+fit.SetParameters(0., 20.8) #Initial guesses
+#fit.FixParameter(0,fit.GetParameter(0)) #Fix intercept
+fit.FixParameter(1,fit.GetParameter(1)) #Fix gradient
 #fit.SetParLimits(1, 0.99, 1.01) #Limit gradient
 gr.Fit("fit","R") #R enforces range of TF1 for fit
 fitIntercept = fit.GetParameter(0)
@@ -35,9 +47,7 @@ fitSlope = fit.GetParameter(1)
 driftVelocity = 1.e3 / fitSlope
 print "Drift velocity =",driftVelocity,"[um/ns]"
 
-#Draw it
-gr.GetXaxis().SetRangeUser(0.,3.)
-#gr.GetYaxis().SetRangeUser(0.,3.)
+#Draw it again with fit
 gr.Draw("AP")
 raw_input("Press Enter to continue...")
 
@@ -65,7 +75,7 @@ def residual(m,c,x,y) :
 
 
 #Book histo
-h_residuals = TH1F('h_residuals',';Residuals to fit [um];', 120, -3.e3, 3.e3)
+h_residuals = TH1F('h_residuals',';Residuals to fit;', 120, -3.e3, 3.e3)
 
 #Get residuals for all points on graph and fill histo
 for i in range(0, gr.GetN() ) :
