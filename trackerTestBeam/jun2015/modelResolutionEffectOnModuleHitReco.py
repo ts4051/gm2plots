@@ -40,6 +40,39 @@ def getLineEndsFromZ(z1,z2,line):
   return yVals,zVals
 
 
+def dca(start,end,point):
+
+    xDelta = end[0] - start[0]
+    yDelta = end[1] - start[1]
+
+    m = yDelta/xDelta
+    c  = end[1] - m*end[0]
+
+    if ((xDelta == 0) and (yDelta == 0)):
+      raise ValueError('dca : xDelta and yDelta are both ZERO')
+
+    u = ( (point[0] - start[0])*xDelta + (point[1] - start[1])*yDelta ) / (xDelta*xDelta + yDelta*yDelta)
+
+    if (u < 0):
+      closestPoint = [start[0], start[1]]
+    elif (u > 1):
+      closestPoint = [end[1], end[1]]
+    else:
+      closestPoint = [ start[0]+u*xDelta,  start[1]+u*yDelta]
+
+    dx = closestPoint[0] - point[0]
+    dy = closestPoint[1] - point[1]
+    
+    if (dy >= 0):
+      sign = -1
+    else:
+      sign = +1
+
+    dcaV = sign*sqrt(dx*dx +dy*dy)
+
+    return dcaV
+
+
 '''
 Main
 '''
@@ -62,6 +95,7 @@ strawMaxZ = 42.6321e3
 residuals = []
 smearingVals = []
 interceptSmearingVals = []
+doubletSmearedIsochroneLineResiduals = []
 for i in xrange(0,args.nevents,1):    
 
   if args.verbose: print '\nEvent',i
@@ -105,12 +139,17 @@ for i in xrange(0,args.nevents,1):
     interceptMean = interceptSum / 2.
 
     #Record as new ioschrone
-    smearedIsochroneLine = Line( m=truthIsochroneLine.m , c=interceptMean )
-    if args.verbose: print "Smeared isochrone line =",smearedIsochroneLine
-    doubletSmearedIsochroneLines.append( smearedIsochroneLine )
-    if args.drawEvents: #Draw it
-      lineYVals,lineZVals = getLineEndsFromZ(strawMinZ,strawMaxZ,smearedIsochroneLine)
-      plt.plot(lineYVals,lineZVals,"r--")
+    smearedDoubletIsochroneLine = Line( m=truthIsochroneLine.m , c=interceptMean )
+    if args.verbose: print "Smeared isochrone line =",smearedDoubletIsochroneLine
+    doubletSmearedIsochroneLines.append( smearedDoubletIsochroneLine )    
+
+    #Record residual of new mean doublet isochrone line to truth
+    lineYVals,lineZVals = getLineEndsFromZ(strawMinZ,strawMaxZ,smearedDoubletIsochroneLine)
+    doubletSmearedIsochroneLineResiduals.append( dca( [lineYVals[0],lineZVals[0]] , [lineYVals[1],lineZVals[1]] , [truthHitPos.y,truthHitPos.z] ) )
+
+    #Draw it
+    if args.drawEvents: plt.plot(lineYVals,lineZVals,"r--")
+
 
   #Find new hit position from smeared lines
   #  y = (c_v - c_u) / (m_u - m_v)   
@@ -140,11 +179,11 @@ grid[0][0].plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the
 grid[0][0].set_title('Single straw smearing [um]\nmean=%f : sigma=%f'%(mu,sigma))
 #grid[0][0].set_xlabel('[um]',horizontalalignment='left')
 
-#Plot the intercept smearing
-n,bins,patches = grid[0][1].hist(np.array(interceptSmearingVals),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
-(mu, sigma) = norm.fit(interceptSmearingVals) #Fit Gaussian
+#Plot the doublet isochrone (mean of two straws) residuals
+n,bins,patches = grid[0][1].hist(np.array(doubletSmearedIsochroneLineResiduals),bins=100,normed=True) #Fill hist (normalise for Gaussian fitting)
+(mu, sigma) = norm.fit(doubletSmearedIsochroneLineResiduals) #Fit Gaussian
 grid[0][1].plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
-grid[0][1].set_title('Doublet isochrone intercept smearing [um]\nmean=%f : sigma=%f'%(mu,sigma))
+grid[0][1].set_title('Doublet mean isochrone residuals [um]\nmean=%f : sigma=%f'%(mu,sigma))
 #grid[0][1].set_xlabel('[um]')
 
 #Plot the y residuals (with Gaussian fit)
