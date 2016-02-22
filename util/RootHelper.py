@@ -20,7 +20,7 @@ def openFile(fileName):
 # Function to get object from file
 #
 
-def getFromFile(rootFile,objectPath):
+def getFromFile(rootFile,objectPath,mustExist=True):
 
   #Check file
   if (rootFile.IsOpen == False): 
@@ -30,8 +30,11 @@ def getFromFile(rootFile,objectPath):
   #Get object
   obj = rootFile.Get(objectPath)
   if not obj : 
-    print "Error getting '",objectPath,"'"
-    exit(-1)
+    if mustExist :
+      print "Error getting '",objectPath,"'"
+      exit(-1)
+    else :
+      return
 
   return obj
 
