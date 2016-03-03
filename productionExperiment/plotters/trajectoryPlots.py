@@ -79,7 +79,7 @@ def combineAndPlotTrajectories(xaxis,yaxis) :
 gStyle.SetOptStat(0)
 
 #Plot for each 2D projection
-combineAndPlotTrajectories("x","z")
+combineAndPlotTrajectories("z","x")
 combineAndPlotTrajectories("x","y")
 combineAndPlotTrajectories("z","y")
 
