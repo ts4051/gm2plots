@@ -17,95 +17,139 @@ rootFile = rh.openFile(args.inputFile)
 # Function for plotting ratio of two histograms
 #
 
-def plotRatioOfTwoHistos(numeratorHisto,denominatorHisto) : #Ration will be B / A
+def plotRatioOfTwoHistos(numeratorHistoName,denominatorHistoName,title,xtitle) : #Ration will be B / A
 
   # Define two gaussian histograms. Note the X and Y title are defined
   # at booking time using the convention "Hist_title  X_title  Y_title"
   '''
-  h1 = TH1F("h1", "Two gaussian plots and their ratiox title h1 and h2 gaussian histograms", 100, -5, 5)
-  h2 = TH1F("h2", "h2", 100, -5, 5)
-  h1.FillRandom("gaus")
-  h2.FillRandom("gaus")
+  hn = TH1F("hn", "Two gaussian plots and their ratiox title hn and hd gaussian histograms", 100, -5, 5)
+  hd = TH1F("hd", "hd", 100, -5, 5)
+  hn.FillRandom("gaus")
+  hd.FillRandom("gaus")
   '''
 
   # Get the two histograms
-  h1 = rh.getFromFile(rootFile,numeratorHisto)
-  h2 = rh.getFromFile(rootFile,denominatorHisto)
+  hn = rh.getFromFile(rootFile,numeratorHistoName)
+  hd = rh.getFromFile(rootFile,denominatorHistoName)
+
+  # Find which has the largest value
+  numeratorHistoHasLargestValue = True if hn.GetMaximum() > hd.GetMaximum() else False
 
   # Normalise
-  #h1.Scale( 1. / h1.Integral() )
-  #h2.Scale( 1. / h2.Integral() )
+  #hn.Scale( 1. / hn.Integral() )
+  #hd.Scale( 1. / hd.Integral() )
 
   # Define the Canvas
   c = TCanvas("c", "canvas", 800, 800)
 
-  # Upper plot will be in pad1
-  pad1 = TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
-  pad1.SetBottomMargin(0.04) # Upper and lower plot are joined
-  pad1.SetGridx()         # Vertical grid
-  pad1.Draw()             # Draw the upper pad: pad1
-  pad1.cd()               # pad1 becomes the current pad
-  h1.SetStats(0)          # No statistics on upper plot
-  h1.Draw()               # Draw h1
-  h2.Draw("same")         # Draw h2 on top of h1
+  # Upper plot will be in topPad
+  topPad = TPad("topPad", "topPad", 0, 0.3, 1, 1.0)
+  topPad.SetBottomMargin(0.04) # Upper and lower plot are joined
+  topPad.SetGridx()         # Vertical grid
+  topPad.Draw()             # Draw the upper pad: topPad
+  topPad.cd()               # topPad becomes the current pad
+  hn.SetStats(0)          # No statistics on upper plot
+
+  # Draw histo with largest value first (to get correct y axis range), then overlay other
+  if numeratorHistoHasLargestValue : 
+    hn.SetTitle(title)
+    hn.Draw()               # Draw hn
+    hd.Draw("same")         # Draw hd on top of hn
+  else :
+    hd.SetTitle(title)
+    hd.Draw()               # Draw hd
+    hn.Draw("same")         # Draw hn on top of hd
+
+  # Draw a scaled version of the smaller histo for ease of viewer
+  hs = hd.Clone("hs") if numeratorHistoHasLargestValue else hn.Clone("hs")
+  maxBin = hd.GetMaximumBin() if numeratorHistoHasLargestValue else hn.GetMaximumBin()
+  scaleFactor = hn.GetBinContent(maxBin)/hd.GetBinContent(maxBin) if numeratorHistoHasLargestValue else hd.GetBinContent(maxBin)/hn.GetBinContent(maxBin)
+  hs.Scale(scaleFactor)
+  hs.SetStats(0)
+  hs.Draw("same")
+
+  '''
+  print "numeratorHistoHasLargestValue = ",numeratorHistoHasLargestValue
+  print "maxBin = ",maxBin
+  print "maxBin x = ",hn.GetXaxis().GetBinCenter(maxBin)
+  print "hn.GetBinContent(maxBin) = ",hn.GetBinContent(maxBin)
+  print "hd.GetBinContent(maxBin) = ",hd.GetBinContent(maxBin)
+  print "scaleFactor = ",scaleFactor
+  '''
 
   # Do not draw the Y axis label on the upper plot and redraw a small
   # axis instead, in order to avoid the first label (0) to be clipped.
 
   # lower plot will be in pad
-  c.cd()          # Go back to the main canvas before defining pad2
-  pad2 = TPad("pad2", "pad2", 0, 0.05, 1, 0.3)
-  pad2.SetBottomMargin(0.25)
-  pad2.SetGridx() # vertical grid
-  pad2.Draw()
-  pad2.cd()       # pad2 becomes the current pad
+  c.cd()          # Go back to the main canvas before defining bottomPad
+  bottomPad = TPad("bottomPad", "bottomPad", 0, 0.05, 1, 0.3)
+  bottomPad.SetBottomMargin(0.25)
+  bottomPad.SetGridx() # vertical grid
+  bottomPad.Draw()
+  bottomPad.cd()       # bottomPad becomes the current pad
 
   # Define the ratio plot
-  h3 = h2.Clone("h3")
-  h3.SetLineColor(kBlack)
-  #h3.SetMinimum(0.8)  # Define Y ..
-  #h3.SetMaximum(1.35) # .. range
-  h3.Sumw2()
-  h3.SetStats(0)      # No statistics on lower plot
-  h3.Divide(h1)
-  h3.SetMarkerStyle(21)
-  h3.Draw("ep")       # Draw the ratio plot
+  hr = hn.Clone("hr")
+  hr.SetLineColor(kBlack)
+  #hr.SetMinimum(0.8)  # Define Y ..
+  #hr.SetMaximum(1.35) # .. range
+  hr.Sumw2()
+  hr.SetStats(0)      # No statistics on lower plot
+  hr.Divide(hd)
+  hr.Scale(100.)      # Ratio -> percentage
+  hr.SetMarkerStyle(21)
+  hr.Draw("ep")       # Draw the ratio plot
 
-  # h1 settings
-  h1.SetLineColor(kBlue+1)
-  h1.SetLineWidth(2)
+  # hn settings
+  hn.SetLineColor(kBlue+1)
+  hn.SetLineWidth(2)
 
-  # X axis h1 plot settings
-  h1.GetXaxis().SetTitleSize(0)
-  h1.GetXaxis().SetLabelSize(0)
+  # X axis hn plot settings
+  hn.GetXaxis().SetTitleSize(0)
+  hn.GetXaxis().SetLabelSize(0)
 
-  # Y axis h1 plot settings
-  h1.GetYaxis().SetTitleSize(20)
-  h1.GetYaxis().SetTitleFont(43)
-  h1.GetYaxis().SetTitleOffset(1.55)
+  # Y axis hn plot settings
+  hn.GetYaxis().SetTitleSize(20)
+  hn.GetYaxis().SetTitleFont(43)
+  hn.GetYaxis().SetTitleOffset(1.55)
 
-  # h2 settings
-  h2.SetLineColor(kRed)
-  h2.SetLineWidth(2)
+  # hd settings
+  hd.SetLineColor(kRed)
+  hd.SetLineWidth(2)
 
-  # Ratio plot (h3) settings
-  h3.SetTitle("") # Remove the ratio title
+  # hs settings
+  if numeratorHistoHasLargestValue : hs.SetLineColor(kRed)
+  else : hs.SetLineColor(kBlue+1)
+  hs.SetLineWidth(2)
+  hs.SetLineStyle(7)
+
+  # Ratio plot (hr) settings
+  hr.SetTitle("") # Remove the ratio title
+  hr.GetXaxis().SetTitle(xtitle)
 
   # Y axis ratio plot settings
-  h3.GetYaxis().SetTitle("ratio")
-  h3.GetYaxis().SetNdivisions(505)
-  h3.GetYaxis().SetTitleSize(20)
-  h3.GetYaxis().SetTitleFont(43)
-  h3.GetYaxis().SetTitleOffset(1.55)
-  h3.GetYaxis().SetLabelFont(43) # Absolute font size in pixel (precision 3)
-  h3.GetYaxis().SetLabelSize(15)
+  hr.GetYaxis().SetTitle("ratio (%)")
+  hr.GetYaxis().SetNdivisions(505)
+  hr.GetYaxis().SetTitleSize(20)
+  hr.GetYaxis().SetTitleFont(43)
+  hr.GetYaxis().SetTitleOffset(1.55)
+  hr.GetYaxis().SetLabelFont(43) # Absolute font size in pixel (precision 3)
+  hr.GetYaxis().SetLabelSize(15)
 
   # X axis ratio plot settings
-  h3.GetXaxis().SetTitleSize(20)
-  h3.GetXaxis().SetTitleFont(43)
-  h3.GetXaxis().SetTitleOffset(4.)
-  h3.GetXaxis().SetLabelFont(43) # Absolute font size in pixel (precision 3)
-  h3.GetXaxis().SetLabelSize(15)
+  hr.GetXaxis().SetTitleSize(20)
+  hr.GetXaxis().SetTitleFont(43)
+  hr.GetXaxis().SetTitleOffset(4.)
+  hr.GetXaxis().SetLabelFont(43) # Absolute font size in pixel (precision 3)
+  hr.GetXaxis().SetLabelSize(15)
+
+  # Set ratio plot x axis range
+  minNonZeroBinContent = 1.e99
+  for i_bin in range(1,hr.GetXaxis().GetNbins()+1) :
+    binContent = hr.GetBinContent(i_bin)
+    if binContent > 0. :
+      minNonZeroBinContent = min(binContent,minNonZeroBinContent) 
+  hr.GetYaxis().SetRangeUser(minNonZeroBinContent*0.8,hr.GetMaximum()*1.2)
 
   # wait so user can see the plot
   raw_input("Press Enter to continue...")
@@ -118,6 +162,6 @@ def plotRatioOfTwoHistos(numeratorHisto,denominatorHisto) : #Ration will be B / 
 gStyle.SetOptStat(0)
 
 #Plot for each 2D projection
-plotRatioOfTwoHistos("trajectories/primary_e+/h_birthDeltaR","straw_calo_truth/primary_e+/tracker/trackable/h_vertexDeltaR")
-plotRatioOfTwoHistos("trajectories/primary_e+/h_birthDeltaR","straw_calo_truth/primary_e+/calo/h_vertexDeltaR")
+plotRatioOfTwoHistos("straw_calo_truth/primary_e+/tracker/trackable/h_vertexDeltaR","trajectories/primary_e+/h_birthDeltaR","Trackers","Vertex r (relative to magic r) [mm]")
+plotRatioOfTwoHistos("straw_calo_truth/primary_e+/calo/h_vertexDeltaR","trajectories/primary_e+/h_birthDeltaR","Calorimeters","Vertex r (relative to magic r) [mm]")
 
