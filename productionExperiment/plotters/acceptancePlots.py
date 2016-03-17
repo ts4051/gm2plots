@@ -17,16 +17,7 @@ rootFile = rh.openFile(args.inputFile)
 # Function for plotting ratio of two histograms
 #
 
-def plotRatioOfTwoHistos(numeratorHistoName,denominatorHistoName,title,xtitle) : #Ration will be B / A
-
-  # Define two gaussian histograms. Note the X and Y title are defined
-  # at booking time using the convention "Hist_title  X_title  Y_title"
-  '''
-  hn = TH1F("hn", "Two gaussian plots and their ratiox title hn and hd gaussian histograms", 100, -5, 5)
-  hd = TH1F("hd", "hd", 100, -5, 5)
-  hn.FillRandom("gaus")
-  hd.FillRandom("gaus")
-  '''
+def plotRatioOfTwoHistos(numeratorHistoName,denominatorHistoName,title,xtitle,addScaledPlot) : #Ration will be B / A
 
   # Get the two histograms
   hn = rh.getFromFile(rootFile,numeratorHistoName)
@@ -61,21 +52,13 @@ def plotRatioOfTwoHistos(numeratorHistoName,denominatorHistoName,title,xtitle) :
     hn.Draw("same")         # Draw hn on top of hd
 
   # Draw a scaled version of the smaller histo for ease of viewer
-  hs = hd.Clone("hs") if numeratorHistoHasLargestValue else hn.Clone("hs")
-  maxBin = hd.GetMaximumBin() if numeratorHistoHasLargestValue else hn.GetMaximumBin()
-  scaleFactor = hn.GetBinContent(maxBin)/hd.GetBinContent(maxBin) if numeratorHistoHasLargestValue else hd.GetBinContent(maxBin)/hn.GetBinContent(maxBin)
-  hs.Scale(scaleFactor)
-  hs.SetStats(0)
-  hs.Draw("same")
-
-  '''
-  print "numeratorHistoHasLargestValue = ",numeratorHistoHasLargestValue
-  print "maxBin = ",maxBin
-  print "maxBin x = ",hn.GetXaxis().GetBinCenter(maxBin)
-  print "hn.GetBinContent(maxBin) = ",hn.GetBinContent(maxBin)
-  print "hd.GetBinContent(maxBin) = ",hd.GetBinContent(maxBin)
-  print "scaleFactor = ",scaleFactor
-  '''
+  if addScaledPlot :
+    hs = hd.Clone("hs") if numeratorHistoHasLargestValue else hn.Clone("hs")
+    maxBin = hd.GetMaximumBin() if numeratorHistoHasLargestValue else hn.GetMaximumBin()
+    scaleFactor = hn.GetBinContent(maxBin)/hd.GetBinContent(maxBin) if numeratorHistoHasLargestValue else hd.GetBinContent(maxBin)/hn.GetBinContent(maxBin)
+    hs.Scale(scaleFactor)
+    hs.SetStats(0)
+    hs.Draw("same")
 
   # Do not draw the Y axis label on the upper plot and redraw a small
   # axis instead, in order to avoid the first label (0) to be clipped.
@@ -118,10 +101,11 @@ def plotRatioOfTwoHistos(numeratorHistoName,denominatorHistoName,title,xtitle) :
   hd.SetLineWidth(2)
 
   # hs settings
-  if numeratorHistoHasLargestValue : hs.SetLineColor(kRed)
-  else : hs.SetLineColor(kBlue+1)
-  hs.SetLineWidth(2)
-  hs.SetLineStyle(7)
+  if addScaledPlot :
+    if numeratorHistoHasLargestValue : hs.SetLineColor(kRed)
+    else : hs.SetLineColor(kBlue+1)
+    hs.SetLineWidth(2)
+    hs.SetLineStyle(7)
 
   # Ratio plot (hr) settings
   hr.SetTitle("") # Remove the ratio title
@@ -149,7 +133,7 @@ def plotRatioOfTwoHistos(numeratorHistoName,denominatorHistoName,title,xtitle) :
     binContent = hr.GetBinContent(i_bin)
     if binContent > 0. :
       minNonZeroBinContent = min(binContent,minNonZeroBinContent) 
-  hr.GetYaxis().SetRangeUser(minNonZeroBinContent*0.8,hr.GetMaximum()*1.2)
+  hr.GetYaxis().SetRangeUser(minNonZeroBinContent*0.6,hr.GetMaximum()*1.4)
 
   # wait so user can see the plot
   raw_input("Press Enter to continue...")
@@ -161,7 +145,16 @@ def plotRatioOfTwoHistos(numeratorHistoName,denominatorHistoName,title,xtitle) :
 
 gStyle.SetOptStat(0)
 
-#Plot for each 2D projection
-plotRatioOfTwoHistos("straw_calo_truth/primary_e+/tracker/trackable/h_vertexDeltaR","trajectories/primary_e+/h_birthDeltaR","Trackers","Vertex r (relative to magic r) [mm]")
-plotRatioOfTwoHistos("straw_calo_truth/primary_e+/calo/h_vertexDeltaR","trajectories/primary_e+/h_birthDeltaR","Calorimeters","Vertex r (relative to magic r) [mm]")
+#Vertex radial pos
+plotRatioOfTwoHistos("straw_calo_truth/primary_e+/tracker/trackable/h_vertexDeltaR","trajectories/primary_e+/h_birthDeltaR","Trackers","Vertex r (relative to magic r) [mm]",True)
+plotRatioOfTwoHistos("straw_calo_truth/primary_e+/calo/h_vertexDeltaR","trajectories/primary_e+/h_birthDeltaR","Calorimeters","Vertex r (relative to magic r) [mm]",True)
+
+#Vertex vertical pos
+plotRatioOfTwoHistos("straw_calo_truth/primary_e+/tracker/trackable/h_vertexHeight","trajectories/primary_e+/h_birthY","Trackers","Vertex vertical pos [mm]",True)
+plotRatioOfTwoHistos("straw_calo_truth/primary_e+/calo/h_vertexHeight","trajectories/primary_e+/h_birthY","Calorimeters","Vertex vertical pos [mm]",False)
+
+#Vertex E
+plotRatioOfTwoHistos("straw_calo_truth/primary_e+/tracker/trackable/h_vertexE","trajectories/primary_e+/h_birthE","Trackers","Vertex E [MeV]",False)
+plotRatioOfTwoHistos("straw_calo_truth/primary_e+/calo/h_vertexE","trajectories/primary_e+/h_birthE","Calorimeters","Vertex E [MeV]",False)
+
 
