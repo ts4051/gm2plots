@@ -1,4 +1,4 @@
-#Make nicer graph of calo and straw hit positions
+#Make nicer plots of calo and straw hit positions
 
 from ROOT import TFile, gROOT, TCanvas, gStyle, TGraph, TMultiGraph, Double, kRed, kGreen, kBlue
 import os, argparse, math, sys
@@ -14,14 +14,45 @@ args = parser.parse_args()
 rootFile = rh.openFile(args.inputFile)
 
 
+#
+# Compare two hit position plots
+#
+
+def plotHitTruthPositions(topPlotPath,topPlotTitle,bottomPlotPath,bottomPlotTitle) :
+
+  #Create a fresh canvas
+  c = TCanvas("c","",1200,800)
+  c.Divide(1,2)
+
+  #First hit plot
+  h_primaryPositronHits = rh.getFromFile(rootFile,topPlotPath)
+  c.cd(1)
+  h_primaryPositronHits.SetTitle(topPlotTitle)
+  #h_primaryPositronHits.GetYaxis().SetTitleOffset(1.5)
+  h_primaryPositronHits.SetStats(False)
+  h_primaryPositronHits.GetYaxis().SetRangeUser(-200.,400.)
+  h_primaryPositronHits.Draw("COLZ")
+
+  #Second hit plot
+  h_secondaryHits = rh.getFromFile(rootFile,bottomPlotPath)
+  c.cd(2)
+  h_secondaryHits.SetTitle(bottomPlotTitle)
+  #h_secondaryHits.GetYaxis().SetTitleOffset(1.5)
+  h_secondaryHits.SetStats(False)
+  h_secondaryHits.GetYaxis().SetRangeUser(-200.,400.)
+  h_secondaryHits.Draw("COLZ")
+
+  raw_input("Press Enter to continue...")
+
+
 
 #
-# Function making a nice TGraph
+# Hit positions as trajectories
 #
 
-def plotHits(particle,station) :
+def plotHitTrajectories(particle,station) :
 
-  gr = rh.getFromFile(rootFile,'straw_calo_truth/%s/station_%i/g_hitPosTop' % (particle,station), False )
+  gr = rh.getFromFile(rootFile,'straw_calo_truth/%s/station_%i/g_hitPosTop' % (particle,station) )
 
   gr.Draw("AP")
   gr.GetYaxis().SetTitleOffset(1.5)
@@ -29,9 +60,20 @@ def plotHits(particle,station) :
 
 
 #
-#Plot ahit positons together
+#Plot detector hit positions together
 #
 
+#Compare hit positions from primary e+ and secondaries (do for all stations)
+stations = [0,12,18]
+for station in stations :
+  plotHitTruthPositions("straw_calo_truth/primary_e+/tracker/station_%i/h_hitPosTop_newBinning"%(station),"Hits from primary e+","straw_calo_truth/secondaries/tracker/station_%i/h_hitPosTop_newBinning"%(station),"Hits from secondaries")
+
+#Compare hit positions for "all primary e+" vs "trackable primary e+" (do for all stations)
+stations = [0,12,18]
+for station in stations :
+  plotHitTruthPositions("straw_calo_truth/primary_e+/tracker/station_%i/h_hitPosTop_newBinning"%(station),"Hits from ALL primary e+","straw_calo_truth/primary_e+/tracker/station_%i/trackable/h_hitPosTop_newBinning"%(station),"Hits from TRACKABLE primary e+")
+
+#Plot detector hits as trajectories
 gStyle.SetOptStat(0)
-plotHits("primary_e+",0)
+plotHitTrajectories("primary_e+",0)
 
