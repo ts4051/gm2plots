@@ -8,6 +8,7 @@ import RootHelper as rh
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('-i','--input-file', type=str, required=False, default="./fiberHarpSignalOverTimePlots.root", \
                     help='Input ROOT file containing plots from FiberHarpSignalOverTime module', dest='inputFile')
+parser.add_argument("-p",'--draw-points', action='store_true', dest='drawPoints')
 args = parser.parse_args()
 
 #Open input file
@@ -17,11 +18,11 @@ if not rootFile : sys.exit(-1)
 gStyle.SetOptStat(0)
 
 #Prepare multi-graphs
-mg_run_amplitude = TMultiGraph()
-leg_run_amplitude = TLegend(0.4,0.6,0.7,0.8)
-
 mg_run_area = TMultiGraph()
 leg_run_area = TLegend(0.4,0.6,0.7,0.8)
+
+mg_run_amplitude = TMultiGraph()
+leg_run_amplitude = TLegend(0.4,0.6,0.7,0.8)
 
 #
 # Loop over fibers
@@ -35,7 +36,7 @@ for i_fiber in range(0,7) :
 
   #Get area plots
   g_run_area = rh.getFromFile(rootFile,fiberRootDirName+'/g_run_area')
-  g_run_area.SetMarkerStyle(8)
+  g_run_area.SetMarkerStyle( 8 if args.drawPoints else 1 )
   g_run_area.SetMarkerSize(1)
   g_run_area.SetMarkerColor(i_fiber+1)
   g_run_area.SetLineColor(i_fiber+1)
@@ -44,7 +45,7 @@ for i_fiber in range(0,7) :
 
   #Get amplitude plots
   g_run_amplitude = rh.getFromFile(rootFile,fiberRootDirName+'/g_run_amplitude')
-  g_run_amplitude.SetMarkerStyle(8)
+  g_run_amplitude.SetMarkerStyle( 8 if args.drawPoints else 1 )
   g_run_amplitude.SetMarkerSize(1)
   g_run_amplitude.SetMarkerColor(i_fiber+1)
   g_run_amplitude.SetLineColor(i_fiber+1)
@@ -58,7 +59,7 @@ for i_fiber in range(0,7) :
 
 mg_run_area.Draw("APL") #Draw once to populate axes
 mg_run_area.GetXaxis().SetTitle( "Run num" )
-mg_run_area.GetYaxis().SetTitle( "Area" )
+mg_run_area.GetYaxis().SetTitle( "Waveform area [ADC counts]" )
 mg_run_area.GetYaxis().SetTitleOffset(1.2)
 mg_run_area.GetYaxis().SetTitleOffset(1.5)
 mg_run_area.SetTitle( "Mean fiber ampltiude vs table x position" )
@@ -70,7 +71,7 @@ raw_input("Press Enter to continue...")
 
 mg_run_amplitude.Draw("APL") #Draw once to populate axes
 mg_run_amplitude.GetXaxis().SetTitle( "Run num" )
-mg_run_amplitude.GetYaxis().SetTitle( "Amplitude" )
+mg_run_amplitude.GetYaxis().SetTitle( "Waveform amplitude [ADC counts]" )
 mg_run_amplitude.GetYaxis().SetTitleOffset(1.2)
 mg_run_amplitude.GetYaxis().SetTitleOffset(1.5)
 mg_run_amplitude.SetTitle( "Mean fiber ampltiude vs table x position" )
