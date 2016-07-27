@@ -1,14 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.mlab as mlab
-from mpl_toolkits.mplot3d import axes3d, Axes3D #<-- Note the capitalization! 
-#from scipy.optimize import curve_fit
-#from scipy.stats import chi2
-from sys import argv,exit
-import datetime
-import math
-from random import gauss,uniform
-import argparse
+import sys, datetime, math, random, argparse
 from ROOT import TFile, TCanvas, gStyle, TH1F, TH2F, TGraph2D
 #import pylab
 
