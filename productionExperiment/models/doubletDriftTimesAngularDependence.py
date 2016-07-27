@@ -40,6 +40,7 @@ numXSteps = int( ( ( xRangeMm[1] - xRangeMm[0] ) / xStepMm ) + 1 )
 wireOffsetBetweenLayersMm = [ 2.5, 0., 2*strawRadiusMm ] #TODO Update
 layer0WireOrigin = np.array( [0., 0., 0.] )
 layer1WireOrigin = np.array( [ layer0WireOrigin[0] + wireOffsetBetweenLayersMm[0] , layer0WireOrigin[1], layer0WireOrigin[2] + wireOffsetBetweenLayersMm[2] ] )
+expectedDCASumMm = strawRadiusMm #If perfect antocorrelation
 
 print "Wire origins = %s, %s" % (str(layer0WireOrigin),str(layer1WireOrigin))
 
@@ -100,6 +101,15 @@ for i_angle in range(0,numAngleSteps) :
 h = TH2F("h_doubletDCASum","DCA sum in doublet [mm]",numXSteps,xRangeMm[0],xRangeMm[1],numAngleSteps,angleRangeDeg[0],angleRangeDeg[1])
 for i_point in range(0,len(angleVals)) :
   h.Fill(xVals[i_point],angleVals[i_point],dcaSumVals[i_point])
+h.GetXaxis().SetTitle("x [mm]")
+h.GetYaxis().SetTitle("Angle of incidence [deg]")
+h.Draw("COLZ")
+gStyle.SetOptStat(0)
+raw_input("Press Enter to continue...")
+
+h = TH2F("h_doubletDCASumError","DCA sum error in doublet [mm]",numXSteps,xRangeMm[0],xRangeMm[1],numAngleSteps,angleRangeDeg[0],angleRangeDeg[1])
+for i_point in range(0,len(angleVals)) :
+  h.Fill(xVals[i_point],angleVals[i_point],dcaSumVals[i_point]-expectedDCASumMm)
 h.GetXaxis().SetTitle("x [mm]")
 h.GetYaxis().SetTitle("Angle of incidence [deg]")
 h.Draw("COLZ")
