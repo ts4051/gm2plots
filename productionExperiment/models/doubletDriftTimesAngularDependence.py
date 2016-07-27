@@ -41,6 +41,7 @@ wireOffsetBetweenLayersMm = [ 2.5, 0., 2*strawRadiusMm ] #TODO Update
 layer0WireOrigin = np.array( [0., 0., 0.] )
 layer1WireOrigin = np.array( [ layer0WireOrigin[0] + wireOffsetBetweenLayersMm[0] , layer0WireOrigin[1], layer0WireOrigin[2] + wireOffsetBetweenLayersMm[2] ] )
 expectedDCASumMm = strawRadiusMm #If perfect antocorrelation
+driftVelocityMmPerNs = 50.e-3
 
 print "Wire origins = %s, %s" % (str(layer0WireOrigin),str(layer1WireOrigin))
 
@@ -113,6 +114,49 @@ for i_point in range(0,len(angleVals)) :
 h.GetXaxis().SetTitle("x [mm]")
 h.GetYaxis().SetTitle("Angle of incidence [deg]")
 h.Draw("COLZ")
+gStyle.SetOptStat(0)
+raw_input("Press Enter to continue...")
+
+
+#
+# Plot T0 error
+#
+
+h_t0Error = TH2F("h_t0Error","T0 error [ns]",numXSteps,xRangeMm[0],xRangeMm[1],numAngleSteps,angleRangeDeg[0],angleRangeDeg[1])
+h_layer0DCAError = TH2F("h_layer0DCAError","Layer 0 DCA error [mm]",numXSteps,xRangeMm[0],xRangeMm[1],numAngleSteps,angleRangeDeg[0],angleRangeDeg[1])
+h_layer1DCAError = TH2F("h_layer1DCAError","Layer 1 DCA error [mm]",numXSteps,xRangeMm[0],xRangeMm[1],numAngleSteps,angleRangeDeg[0],angleRangeDeg[1])
+
+for i_point in range(0,len(angleVals)) :
+  layer0DriftTime = layer0DCAVals[i_point] / driftVelocityMmPerNs
+  layer1DriftTime = layer1DCAVals[i_point] / driftVelocityMmPerNs
+  trueT0 = 0.
+  layer0HitTime = trueT0 + layer0DriftTime
+  layer1HitTime = trueT0 + layer1DriftTime
+  recoT0 = ( layer0HitTime + layer1HitTime - ( expectedDCASumMm / driftVelocityMmPerNs ) ) / 2
+  h_t0Error.Fill(xVals[i_point],angleVals[i_point],recoT0-trueT0)
+  
+  layer0RecoDriftTime = layer0HitTime - recoT0 
+  layer0RecoDCA = layer0RecoDriftTime * driftVelocityMmPerNs
+  layer1RecoDriftTime = layer1HitTime - recoT0
+  layer1RecoDCA = layer1RecoDriftTime * driftVelocityMmPerNs
+  h_layer0DCAError.Fill(xVals[i_point],angleVals[i_point],layer0RecoDCA-layer0DCAVals[i_point])
+  h_layer1DCAError.Fill(xVals[i_point],angleVals[i_point],layer1RecoDCA-layer1DCAVals[i_point])
+
+h_t0Error.GetXaxis().SetTitle("x [mm]")
+h_t0Error.GetYaxis().SetTitle("Angle of incidence [deg]")
+h_t0Error.Draw("COLZ")
+gStyle.SetOptStat(0)
+raw_input("Press Enter to continue...")
+
+h_layer0DCAError.GetXaxis().SetTitle("x [mm]")
+h_layer0DCAError.GetYaxis().SetTitle("Angle of incidence [deg]")
+h_layer0DCAError.Draw("COLZ")
+gStyle.SetOptStat(0)
+raw_input("Press Enter to continue...")
+
+h_layer1DCAError.GetXaxis().SetTitle("x [mm]")
+h_layer1DCAError.GetYaxis().SetTitle("Angle of incidence [deg]")
+h_layer1DCAError.Draw("COLZ")
 gStyle.SetOptStat(0)
 raw_input("Press Enter to continue...")
 
