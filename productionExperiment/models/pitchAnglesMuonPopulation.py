@@ -8,196 +8,195 @@ import sys, datetime, math, random, argparse
 import matplotlib.pyplot as plt
 import mathtools
 
+#Import common functions from other pitch angle toy MC
+import pitchAnglesOneMuon
+
 
 #
-# Define params
+# Simulation
 #
 
-#The ring
-fieldIndex = 0.175
-cyclotronPeriodNs = 149.
-injectionYMeanMm = 0. 
-injectionYSigmaMm = 10. #TODO
-ringVerticalAcceptanceMm = 45.
+if __name__ == "__main__" : #Only run if this script is the one execued (not imported)
 
-#Sim
-numMuons = 100000
-t0Ns = 0.
-debug = False
+  #
+  # Define params
+  #
 
-#Physics constants
-speedOfLightMperS = 299792458. #CODATA 2014
-muonAnomoly = 11659203.e-10 #E821 value
-muonRestMassGeV = 105.6583715e-3 #PDG 2014
-muonRestLifetimeNs = 2.1969811e3
+  #Injection
+  injectionYMeanMm = 0. 
+  injectionYSigmaMm = 10. #TODO
 
-#Derived
-verticalBetatronPeriodNs = cyclotronPeriodNs / math.sqrt(fieldIndex)
+  #Sim
+  numMuons = 100000
+  debug = False
 
-print ""
-print "Params:"
-print "  Num mu+ = %i" % (numMuons)
-print "  n = %f" % (fieldIndex)
-print ""
+  print ""
+  print "Params:"
+  print "  Num mu+ = %i" % (numMuons)
+  print "  n = %f" % (pitchAnglesOneMuon.fieldIndex)
+  print "  Ring vertical acceptance = %f [mm]" % (pitchAnglesOneMuon.ringVerticalAcceptanceMm)
+  print "  Gaussian vertical injection profile : Mean = %f [mm] : Sigma = %f [mm]" % (injectionYMeanMm,injectionYSigmaMm)
+  print ""
 
-#
-# Generate data
-#
+  #
+  # Data containers
+  #
 
-#Init containers
-injectionYValsMm = list()
-injectionMomentumValsGeV = list()
-injectionTimeValsNs = list()
-timeInRingValsNs = list()
-decayTimeValsNs = list()
-decayYValsMm = list()
-decayPitchAngleValsDeg = list()
-decayPitchAngle2ValsRad2 = list()
+  injectionYValsMm = list()
+  injectionMomentumValsGeV = list()
+  injectionTimeValsNs = list()
+  timeInRingValsNs = list()
+  decayTimeValsNs = list()
+  decayYValsMm = list()
+  decayPitchAngleValsDeg = list()
+  decayPitchAngle2ValsRad2 = list()
 
-#Loop over mu+
-for i_mu in range(0,numMuons) :
 
-  #Generate injection y (truncate around max acceptance)
-  while True :
-    injectionYMm = random.gauss(injectionYMeanMm,injectionYSigmaMm)
-    if abs(injectionYMm) < ringVerticalAcceptanceMm : break
-  injectionYValsMm.append(injectionYMm)
+  #
+  # Generate data
+  #
 
-  #Generate momentum
-  pGeV = 3.09 #TODO Spread
-  injectionMomentumValsGeV.append(pGeV)
+  #Loop over mu+
+  for i_mu in range(0,numMuons) :
 
-  #Get boost from momentum
-  gamma = pGeV / muonRestMassGeV
+    #Generate injection y (truncate around max acceptance)
+    while True :
+      injectionYMm = random.gauss(injectionYMeanMm,injectionYSigmaMm)
+      if abs(injectionYMm) < pitchAnglesOneMuon.ringVerticalAcceptanceMm : break
+    injectionYValsMm.append(injectionYMm)
 
-  #Generate injection time
-  injectionTimeNs = 0.
-  #TODO spread, W function
-  injectionTimeValsNs.append(injectionTimeNs)
+    #Generate momentum
+    pGeV = 3.09 #TODO Spread
+    injectionMomentumValsGeV.append(pGeV)
 
-  #Generate decay time (get dilated lifetime and generate decay from exponetial using this as time constant)
-  lifetimeNs = gamma * muonRestLifetimeNs
-  timeInRingNs = -1. * lifetimeNs * math.log( random.uniform(0.,1.) )
-  timeInRingValsNs.append(timeInRingNs)
-  decayTimeNs = injectionTimeNs + timeInRingNs
-  decayTimeValsNs.append(decayTimeNs)
+    #Get boost from momentum
+    gamma = pGeV / pitchAnglesOneMuon.muonRestMassGeV
 
-  #Get y at decay time (vertical BO amplitude is displacement from orbit plane at injection)
-  #Only oscillate during time in ring (e.g. don't include injection time)
-  verticalBetatronAmplitudeMm = injectionYMm
-  decayYMm = verticalBetatronAmplitudeMm * math.cos( 2 * math.pi * timeInRingNs / verticalBetatronPeriodNs ) #TODO Correct betatron period for cyclotron variation with boost
-  decayYValsMm.append(decayYMm)
+    #Generate injection time
+    injectionTimeNs = 0.
+    #TODO spread, W function
+    injectionTimeValsNs.append(injectionTimeNs)
 
-  #Get pitch angle at time of decay, psi = atan(dy/dz)
-  # dy/dz = - (2*pi*Ay/(c*T)) * sin(2*pi*t/T), where t=z/c (assuming particle travelling at c) #TODO calculate v from boost
-  dydz = -2. * math.pi * (verticalBetatronAmplitudeMm*1.e-3) * math.sin( 2 * math.pi * timeInRingNs / verticalBetatronPeriodNs ) / ( speedOfLightMperS * (verticalBetatronPeriodNs*1.e-9) )
-  psiRad = math.atan(dydz)
-  decayPitchAngleValsDeg.append( math.degrees(psiRad) )
-  decayPitchAngle2ValsRad2.append(psiRad*psiRad)
+    #Generate decay time (get dilated lifetime and generate decay from exponetial using this as time constant)
+    lifetimeNs = gamma * pitchAnglesOneMuon.muonRestLifetimeNs
+    timeInRingNs = -1. * lifetimeNs * math.log( random.uniform(0.,1.) )
+    timeInRingValsNs.append(timeInRingNs)
+    decayTimeNs = injectionTimeNs + timeInRingNs
+    decayTimeValsNs.append(decayTimeNs)
 
+    #Get y at decay time (vertical BO amplitude is displacement from orbit plane at injection) 
+    #Only oscillate during time in ring (e.g. don't include injection time)
+    verticalBetatronAmplitudeMm = injectionYMm
+    decayYMm = pitchAnglesOneMuon.verticalBetatronPositionMm(verticalBetatronAmplitudeMm,pitchAnglesOneMuon.verticalBetatronPeriodNs,timeInRingNs)
+    decayYValsMm.append(decayYMm)
+
+    #Get pitch angle at time of decay, psi
+    psiRad = pitchAnglesOneMuon.verticalBetatronPitchAngleRad(verticalBetatronAmplitudeMm,pitchAnglesOneMuon.verticalBetatronPeriodNs,timeInRingNs)
+    decayPitchAngleValsDeg.append( math.degrees(psiRad) )
+    decayPitchAngle2ValsRad2.append(psiRad*psiRad)
   
-  #TODO generate full path, bot just decay point to check pitch
+    #TODO generate full path, not just decay point to check pitch
 
-  if debug : 
-    print "mu+ %i : Injection y = %f [mm] : Decay y = %f [mm] : Pitch angle = %f [deg]" \
-      % (i_mu,injectionYMm,decayYMm,math.degrees(psiRad))
-
-
-
-#
-# Plot injection profile
-#
-
-plt.xlabel('Injection y [mm]')
-plt.hist(injectionYValsMm, normed=False, bins=20)
-plt.show()
-
-plt.xlabel('Injection momentum [GeV]')
-plt.hist(injectionMomentumValsGeV, normed=False, bins=20)
-plt.show()
-
-plt.xlabel('Injection time [ns]')
-plt.hist(injectionTimeValsNs, normed=False, bins=20)
-plt.show()
+    #Dump debug info
+    if debug : 
+      print "mu+ %i : Injection y = %f [mm] : Decay y = %f [mm] : Pitch angle = %f [deg]" \
+        % (i_mu,injectionYMm,decayYMm,math.degrees(psiRad))
+  
 
 
-#
-# Plot decay profile
-#
+  #
+  # Plot injection profile
+  #
 
-plt.xlabel('Decay y [mm]')
-plt.hist(decayYValsMm, normed=False, bins=20)
-plt.show()
+  plt.xlabel('Injection y [mm]')
+  plt.hist(injectionYValsMm, normed=False, bins=20)
+  plt.show()
 
-plt.xlabel('Decay time in ring [ns]')
-plt.hist(timeInRingValsNs, normed=False, bins=20)
-plt.show()
+  plt.xlabel('Injection momentum [GeV]')
+  plt.hist(injectionMomentumValsGeV, normed=False, bins=20)
+  plt.show()
 
-plt.xlabel('Decay absolute time [ns]')
-plt.hist(decayTimeValsNs, normed=False, bins=20)
-plt.show()
-
-plt.xlabel('Decay pitch angle [deg]')
-plt.hist(decayPitchAngleValsDeg, normed=False, bins=20)
-plt.show()
-
-plt.xlabel('Decay pitch angle squared [rad^2]')
-plt.hist(decayPitchAngle2ValsRad2, normed=False, bins=20)
-plt.show()
-
-'''
-#
-# Plot decay y vs t
-#
-
-plt.title('')
-plt.xlabel('Decay time [ns]')
-plt.ylabel('y [mm]')
-#plt.scatter(tVals,yVals,c='blue')
-plt.plot(tValsNs,yValsMm,"b-")
-plt.show()
+  plt.xlabel('Injection time [ns]')
+  plt.hist(injectionTimeValsNs, normed=False, bins=20)
+  plt.show()
 
 
-#
-# Plot pitch angle vs t
-#
+  #
+  # Plot decay profile
+  #
 
-plt.title('')
-plt.xlabel('Time [ns]')
-plt.ylabel('Pitch angle [deg]')
-plt.plot(tValsNs,psiValsDeg,"b-")
-plt.show()
+  plt.xlabel('Decay y [mm]')
+  plt.hist(decayYValsMm, normed=False, bins=20)
+  plt.show()
+
+  plt.xlabel('Decay time in ring [ns]')
+  plt.hist(timeInRingValsNs, normed=False, bins=20)
+  plt.show()
+
+  plt.xlabel('Decay absolute time [ns]')
+  plt.hist(decayTimeValsNs, normed=False, bins=20)
+  plt.show()
+
+  plt.xlabel('Decay pitch angle [deg]')
+  plt.hist(decayPitchAngleValsDeg, normed=False, bins=20)
+  plt.show()
+
+  plt.xlabel('Decay pitch angle squared [rad^2]')
+  plt.hist(decayPitchAngle2ValsRad2, normed=False, bins=20)
+  plt.show()
+
+  '''
+  #
+  # Plot decay y vs t
+  #
+
+  plt.title('')
+  plt.xlabel('Decay time [ns]')
+  plt.ylabel('y [mm]')
+  #  plt.scatter(tVals,yVals,c='blue')
+  plt.plot(tValsNs,yValsMm,"b-")
+  plt.show()
 
 
-#
-# Histogram pitch angle
-#
+  #
+  # Plot pitch angle vs t
+  #
 
-plt.xlabel('Pitch angle [deg]')
-plt.hist(psiValsDeg, normed=False, bins=20)
-plt.show()
+  plt.title('')
+  plt.xlabel('Time [ns]')
+  plt.ylabel('Pitch angle [deg]')
+  plt.plot(tValsNs,psiValsDeg,"b-")
+  plt.show()
 
-#
-# Plot pitch angle squared vs t
-#
 
-plt.title('')
-plt.xlabel('Time [ns]')
-plt.ylabel('Pitch angle squared [rad^2]')
-plt.plot(tValsNs,psi2ValsRad2,"b-")
-plt.show()
+  #
+  # Histogram pitch angle
+  #
 
-'''
-#
-# Calculate pitch correction
-#
+  plt.xlabel('Pitch angle [deg]')
+  plt.hist(psiValsDeg, normed=False, bins=20)
+  plt.show()
 
-averageDecayPitchAngle2ValsRad2 = sum(decayPitchAngle2ValsRad2) / float(len(decayPitchAngle2ValsRad2)) #TODO use total average, not just from decay
-pitchCorrection = -averageDecayPitchAngle2ValsRad2 / 2 #TDR equation 4.7
-pitchCorrectionPpm = ( pitchCorrection * 1.e6 ) / muonAnomoly
+  #
+  # Plot pitch angle squared vs t
+  #
 
-print ""
-print "Results:"
-print "  Pitch correction = %e (%f ppm for a_mu = %f)" % (pitchCorrection,pitchCorrectionPpm,muonAnomoly)
-print ""
+  plt.title('')
+  plt.xlabel('Time [ns]')
+  plt.ylabel('Pitch angle squared [rad^2]')
+  plt.plot(tValsNs,psi2ValsRad2,"b-")
+  plt.show()
+
+  '''
+
+  #
+  # Calculate pitch correction
+  #
+
+  pitchCorrection, pitchCorrectionPpm = pitchAnglesOneMuon.pitchCorrection(decayPitchAngle2ValsRad2)
+
+  print ""
+  print "Results:"
+  print "  Pitch correction = %e (%f ppm for a_mu = %f)" % (pitchCorrection,pitchCorrectionPpm,pitchAnglesOneMuon.muonAnomoly)
+  print ""
 
