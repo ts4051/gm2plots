@@ -1,4 +1,6 @@
-#Model mu+ pitch angle
+#Model vertical betatron oscillation for single mu+ and corresponding evolution of pitch angle
+#Calculate resulting pitch correction for this one muon
+#Tom Stuttard (12th Oct 2016) 
 
 import numpy as np
 import sys, datetime, math, random, argparse
@@ -14,22 +16,23 @@ import mathtools
 #The ring
 fieldIndex = 0.175
 cyclotronPeriodNs = 149.
-verticalBetatronAmplitudeMm = 45. #Max is 45 mm (e.g. max acceptance of stroage ring)
+verticalBetatronAmplitudeMm = 10. #Max is 45 mm (e.g. max acceptance of storage ring)
 
 #Sim
-numPeriodsToDraw = 5
-numStepsPerPeriod = 100
+numPeriodsToDraw = 10
+numStepsPerPeriod = 1000
 t0Ns = 0.
 
 #Physics constants
-speedOfLightMperS = 3.e8
-amu = 0.00116592
+speedOfLightMperS = 299792458. #CODATA 2014
+muonAnomoly = 11659203.e-10 #E821 value
 
 #Derived
 verticalBetatronPeriodNs = cyclotronPeriodNs / math.sqrt(fieldIndex)
 numSteps = float(numPeriodsToDraw) * float(numStepsPerPeriod)
 stepSizeNs = float(numPeriodsToDraw) * verticalBetatronPeriodNs / float(numSteps)
 
+print ""
 print "Params:"
 print "  n = %f" % (fieldIndex)
 print "  Ty = %f ns" % (verticalBetatronPeriodNs)
@@ -89,6 +92,14 @@ plt.show()
 
 
 #
+# Histogram pitch angle
+#
+
+plt.xlabel('Pitch angle [deg]')
+plt.hist(psiValsDeg, normed=False, bins=20)
+plt.show()
+
+#
 # Plot pitch angle squared vs t
 #
 
@@ -105,9 +116,10 @@ plt.show()
 
 averagePsi2Rad2 = sum(psi2ValsRad2) / float(len(psi2ValsRad2))
 pitchCorrection = -averagePsi2Rad2 / 2 #TDR equation 4.7
-pitchCorrectionPpm = ( pitchCorrection * 1.e6 ) / amu
+pitchCorrectionPpm = ( pitchCorrection * 1.e6 ) / muonAnomoly
 
 print ""
-print "Pitch correction = %e (%f ppm for a_mu = %f)" % (pitchCorrection,pitchCorrectionPpm,amu)
+print "Results:"
+print "  Pitch correction = %e (%f ppm for a_mu = %f)" % (pitchCorrection,pitchCorrectionPpm,muonAnomoly)
 print ""
 
