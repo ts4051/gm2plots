@@ -24,7 +24,8 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   #Injection
   injectionYMeanMm = 0. 
-  injectionYSigmaMm = 10. #TODO
+  injectionYSigmaMm = 8.
+  injectionTimeWidthNs = 120. #TODO W function
 
   #Sim
   numMuons = 100000
@@ -73,7 +74,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     gamma = pGeV / pitchAnglesOneMuon.muonRestMassGeV
 
     #Generate injection time
-    injectionTimeNs = 0.
+    injectionTimeNs = random.uniform(0.,injectionTimeWidthNs)
     #TODO spread, W function
     injectionTimeValsNs.append(injectionTimeNs)
 
@@ -101,7 +102,6 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     if debug : 
       print "mu+ %i : Injection y = %f [mm] : Decay y = %f [mm] : Pitch angle = %f [deg]" \
         % (i_mu,injectionYMm,decayYMm,math.degrees(psiRad))
-  
 
 
   #
@@ -145,58 +145,52 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   plt.hist(decayPitchAngle2ValsRad2, normed=False, bins=20)
   plt.show()
 
-  '''
+
   #
   # Plot decay y vs t
   #
 
   plt.title('')
   plt.xlabel('Decay time [ns]')
-  plt.ylabel('y [mm]')
-  #  plt.scatter(tVals,yVals,c='blue')
-  plt.plot(tValsNs,yValsMm,"b-")
+  plt.ylabel('Decay y [mm]')
+  plt.plot(decayTimeValsNs,decayYValsMm,"b.")
+  plt.xlim([0,1000])
+  plt.show()
+
+  plt.title('')
+  plt.xlabel('Time in ring [ns]')
+  plt.ylabel('Decay y [mm]')
+  plt.plot(timeInRingValsNs,decayYValsMm,"b.")
+  plt.xlim([0,1000])
   plt.show()
 
 
   #
-  # Plot pitch angle vs t
+  # Plot decay pitch angle vs t
   #
 
   plt.title('')
-  plt.xlabel('Time [ns]')
-  plt.ylabel('Pitch angle [deg]')
-  plt.plot(tValsNs,psiValsDeg,"b-")
+  plt.xlabel('Decay time [ns]')
+  plt.ylabel('Decay pitch angle [deg]')
+  plt.plot(decayTimeValsNs,decayPitchAngleValsDeg,"b.")
+  plt.xlim([0,1000])
   plt.show()
-
-
-  #
-  # Histogram pitch angle
-  #
-
-  plt.xlabel('Pitch angle [deg]')
-  plt.hist(psiValsDeg, normed=False, bins=20)
-  plt.show()
-
-  #
-  # Plot pitch angle squared vs t
-  #
 
   plt.title('')
-  plt.xlabel('Time [ns]')
-  plt.ylabel('Pitch angle squared [rad^2]')
-  plt.plot(tValsNs,psi2ValsRad2,"b-")
+  plt.xlabel('Time in ring [ns]')
+  plt.ylabel('Decay pitch angle [deg]')
+  plt.plot(timeInRingValsNs,decayPitchAngleValsDeg,"b.")
+  plt.xlim([0,1000])
   plt.show()
 
-  '''
 
   #
   # Calculate pitch correction
   #
 
-  pitchCorrection, pitchCorrectionPpm = pitchAnglesOneMuon.pitchCorrection(decayPitchAngle2ValsRad2)
+  pitchCorrection, pitchCorrectionPpb = pitchAnglesOneMuon.pitchCorrection(decayPitchAngle2ValsRad2)
 
   print ""
   print "Results:"
-  print "  Pitch correction = %e (%f ppm for a_mu = %f)" % (pitchCorrection,pitchCorrectionPpm,pitchAnglesOneMuon.muonAnomoly)
+  print "  Pitch correction = %f [ppb]" % (pitchCorrectionPpb)
   print ""
-
