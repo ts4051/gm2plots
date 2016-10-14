@@ -13,23 +13,11 @@ import pitchAnglesOneMuon
 
 
 #
-# Simulation
+# Simulation function
 #
 
-if __name__ == "__main__" : #Only run if this script is the one execued (not imported)
-
-  #
-  # Define params
-  #
-
-  #Injection
-  injectionYMeanMm = 0. 
-  injectionYSigmaMm = 8.
-  injectionTimeWidthNs = 120. #TODO W function
-
-  #Sim
-  numMuons = 100000
-  debug = False
+#Function to generate a muon distribution and model the params
+def muonPopulationPitchAnglesModel(numMuons,injectionYMeanMm,injectionYSigmaMm,injectionTimeWidthNs,plot=True,debug=False) :
 
   print ""
   print "Params:"
@@ -108,80 +96,88 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   # Plot injection profile
   #
 
-  plt.xlabel('Injection y [mm]')
-  plt.hist(injectionYValsMm, normed=False, bins=20)
-  plt.show()
+  if plot :
 
-  plt.xlabel('Injection momentum [GeV]')
-  plt.hist(injectionMomentumValsGeV, normed=False, bins=20)
-  plt.show()
+    plt.xlabel('Injection y [mm]')
+    plt.hist(injectionYValsMm, normed=False, bins=20)
+    plt.show()
 
-  plt.xlabel('Injection time [ns]')
-  plt.hist(injectionTimeValsNs, normed=False, bins=20)
-  plt.show()
+    plt.xlabel('Injection momentum [GeV]')
+    plt.hist(injectionMomentumValsGeV, normed=False, bins=20)
+    plt.show()
+
+    plt.xlabel('Injection time [ns]')
+    plt.hist(injectionTimeValsNs, normed=False, bins=20)
+    plt.show()
 
 
   #
   # Plot decay profile
   #
 
-  plt.xlabel('Decay y [mm]')
-  plt.hist(decayYValsMm, normed=False, bins=20)
-  plt.show()
+  if plot :
 
-  plt.xlabel('Decay time in ring [ns]')
-  plt.hist(timeInRingValsNs, normed=False, bins=20)
-  plt.show()
+    plt.xlabel('Decay y [mm]')
+    plt.hist(decayYValsMm, normed=False, bins=20)
+    plt.show()
 
-  plt.xlabel('Decay absolute time [ns]')
-  plt.hist(decayTimeValsNs, normed=False, bins=20)
-  plt.show()
+    plt.xlabel('Decay time in ring [ns]')
+    plt.hist(timeInRingValsNs, normed=False, bins=20)
+    plt.show()
 
-  plt.xlabel('Decay pitch angle [deg]')
-  plt.hist(decayPitchAngleValsDeg, normed=False, bins=20)
-  plt.show()
+    plt.xlabel('Decay absolute time [ns]')
+    plt.hist(decayTimeValsNs, normed=False, bins=20)
+    plt.show()
 
-  plt.xlabel('Decay pitch angle squared [rad^2]')
-  plt.hist(decayPitchAngle2ValsRad2, normed=False, bins=20)
-  plt.show()
+    plt.xlabel('Decay pitch angle [deg]')
+    plt.hist(decayPitchAngleValsDeg, normed=False, bins=20)
+    plt.show()
+
+    plt.xlabel('Decay pitch angle squared [rad^2]')
+    plt.hist(decayPitchAngle2ValsRad2, normed=False, bins=20)
+    plt.show()
 
 
   #
   # Plot decay y vs t
   #
 
-  plt.title('')
-  plt.xlabel('Decay time [ns]')
-  plt.ylabel('Decay y [mm]')
-  plt.plot(decayTimeValsNs,decayYValsMm,"b.")
-  plt.xlim([0,1000])
-  plt.show()
+  if plot :
 
-  plt.title('')
-  plt.xlabel('Time in ring [ns]')
-  plt.ylabel('Decay y [mm]')
-  plt.plot(timeInRingValsNs,decayYValsMm,"b.")
-  plt.xlim([0,1000])
-  plt.show()
+    plt.title('')
+    plt.xlabel('Decay time [ns]')
+    plt.ylabel('Decay y [mm]')
+    plt.plot(decayTimeValsNs,decayYValsMm,"b.")
+    plt.xlim([0,1000])
+    plt.show()
+
+    plt.title('')
+    plt.xlabel('Time in ring [ns]')
+    plt.ylabel('Decay y [mm]')
+    plt.plot(timeInRingValsNs,decayYValsMm,"b.")
+    plt.xlim([0,1000])
+    plt.show()
 
 
   #
   # Plot decay pitch angle vs t
   #
 
-  plt.title('')
-  plt.xlabel('Decay time [ns]')
-  plt.ylabel('Decay pitch angle [deg]')
-  plt.plot(decayTimeValsNs,decayPitchAngleValsDeg,"b.")
-  plt.xlim([0,1000])
-  plt.show()
+  if plot :
 
-  plt.title('')
-  plt.xlabel('Time in ring [ns]')
-  plt.ylabel('Decay pitch angle [deg]')
-  plt.plot(timeInRingValsNs,decayPitchAngleValsDeg,"b.")
-  plt.xlim([0,1000])
-  plt.show()
+    plt.title('')
+    plt.xlabel('Decay time [ns]')
+    plt.ylabel('Decay pitch angle [deg]')
+    plt.plot(decayTimeValsNs,decayPitchAngleValsDeg,"b.")
+    plt.xlim([0,1000])
+    plt.show()
+
+    plt.title('')
+    plt.xlabel('Time in ring [ns]')
+    plt.ylabel('Decay pitch angle [deg]')
+    plt.plot(timeInRingValsNs,decayPitchAngleValsDeg,"b.")
+    plt.xlim([0,1000])
+    plt.show()
 
 
   #
@@ -194,3 +190,39 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   print "Results:"
   print "  Pitch correction = %f [ppb]" % (pitchCorrectionPpb)
   print ""
+
+
+  #
+  # Done
+  #
+
+  #Return results
+  return pitchCorrectionPpb
+
+
+#
+# Run simulation
+# 
+
+if __name__ == "__main__" : #Only run if this script is the one execued (not imported)
+
+  #
+  # Define params
+  #
+
+  #Injection
+  injectionYMeanMm = 0. 
+  injectionYSigmaMm = 8.
+  injectionTimeWidthNs = 120. #TODO W function
+
+  #Sim
+  numMuons = 100000
+  debug = False
+
+  #
+  # Do simulation
+  #
+
+  #Call function that performs simulation for given input params
+  muonPopulationPitchAnglesModel(numMuons,injectionYMeanMm,injectionYSigmaMm,injectionTimeWidthNs,debug=debug)
+

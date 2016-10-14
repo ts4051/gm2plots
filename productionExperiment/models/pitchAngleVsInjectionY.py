@@ -1,4 +1,4 @@
-#Determine how pitch corrections change versus injection paramaters
+#Determine how pitch corrections change versus injection vertical position (y)
 #Tom Stuttard (13th Oct 2016) 
 
 import numpy as np
