@@ -6,6 +6,9 @@ import numpy as np
 import sys, datetime, math, random, argparse
 #import pylab
 import matplotlib.pyplot as plt
+import matplotlib.pylab as pylab
+import matplotlib.mlab as mlab
+from scipy.stats import chi2, norm
 import mathtools
 
 #Import common functions from other pitch angle toy MC
@@ -54,6 +57,8 @@ def muonPopulationPitchAnglesModel(numMuons,injectionYMeanMm,injectionYSigmaMm,i
       if abs(injectionYMm) < pitchAnglesOneMuon.ringVerticalAcceptanceMm : break
     injectionYValsMm.append(injectionYMm)
 
+    #TODO TODO TODO Betatron amplitude depends on injection y and injection psi, here only modelling y dependences (e.g. assuming psi = 0)
+
     #Generate momentum
     pGeV = 3.09 #TODO Spread
     injectionMomentumValsGeV.append(pGeV)
@@ -98,16 +103,18 @@ def muonPopulationPitchAnglesModel(numMuons,injectionYMeanMm,injectionYSigmaMm,i
 
   if plot :
 
-    plt.xlabel('Injection y [mm]')
-    plt.hist(injectionYValsMm, normed=False, bins=20)
+    plt.xlabel('Injection y [mm]',fontsize=20)
+    plt.hist(injectionYValsMm, normed=False, bins=50)
+    #plt.xlim([-100.,100.]) #Use when comparing to TDR Fig. 8.19
+    #plt.xticks(np.arange(-100.,101.,40.)) #Use when comparing to TDR Fig. 8.19
     plt.show()
 
     plt.xlabel('Injection momentum [GeV]')
-    plt.hist(injectionMomentumValsGeV, normed=False, bins=20)
+    plt.hist(injectionMomentumValsGeV, normed=False, bins=50)
     plt.show()
 
     plt.xlabel('Injection time [ns]')
-    plt.hist(injectionTimeValsNs, normed=False, bins=20)
+    plt.hist(injectionTimeValsNs, normed=False, bins=50)
     plt.show()
 
 
@@ -118,23 +125,26 @@ def muonPopulationPitchAnglesModel(numMuons,injectionYMeanMm,injectionYSigmaMm,i
   if plot :
 
     plt.xlabel('Decay y [mm]')
-    plt.hist(decayYValsMm, normed=False, bins=20)
+    n, bins, patches = plt.hist(decayYValsMm, normed=False, bins=50)
+    #(mu, sigma) = norm.fit(decayYValsMm) #Fit Gaussian
+    #plt.title( "Gaussian fit : Mean = %f, sigma = %f [mm]" % (mu,sigma) )
+    #plt.plot(bins, mlab.normpdf(bins,mu,sigma), 'r--', linewidth=2) #Plot the fit
     plt.show()
 
     plt.xlabel('Decay time in ring [ns]')
-    plt.hist(timeInRingValsNs, normed=False, bins=20)
+    plt.hist(timeInRingValsNs, normed=False, bins=50)
     plt.show()
 
     plt.xlabel('Decay absolute time [ns]')
-    plt.hist(decayTimeValsNs, normed=False, bins=20)
+    plt.hist(decayTimeValsNs, normed=False, bins=50)
     plt.show()
 
     plt.xlabel('Decay pitch angle [deg]')
-    plt.hist(decayPitchAngleValsDeg, normed=False, bins=20)
+    plt.hist(decayPitchAngleValsDeg, normed=False, bins=50)
     plt.show()
 
     plt.xlabel('Decay pitch angle squared [rad^2]')
-    plt.hist(decayPitchAngle2ValsRad2, normed=False, bins=20)
+    plt.hist(decayPitchAngle2ValsRad2, normed=False, bins=50)
     plt.show()
 
 
@@ -181,6 +191,19 @@ def muonPopulationPitchAnglesModel(numMuons,injectionYMeanMm,injectionYSigmaMm,i
 
 
   #
+  # Plot decay pitch angle vs y
+  #
+
+  if plot :
+
+    plt.title('')
+    plt.xlabel('Decay y [mm]')
+    plt.ylabel('Decay pitch angle [deg]')
+    plt.plot(decayYValsMm,decayPitchAngleValsDeg,"b.")
+    plt.show()
+
+
+  #
   # Calculate pitch correction
   #
 
@@ -212,12 +235,22 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   #Injection
   injectionYMeanMm = 0. 
-  injectionYSigmaMm = 8.
+  injectionYSigmaMm = 10.
   injectionTimeWidthNs = 120. #TODO W function
 
   #Sim
   numMuons = 100000
   debug = False
+
+  #Matplotlib params
+  params = {'legend.fontsize': 'x-large',
+            'figure.figsize': (12, 8),
+            'axes.labelsize': 'x-large',
+            'axes.titlesize':'x-large',
+            'xtick.labelsize':'x-large',
+            'ytick.labelsize':'x-large'}
+  pylab.rcParams.update(params)
+
 
   #
   # Do simulation

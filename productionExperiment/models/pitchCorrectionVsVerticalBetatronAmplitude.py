@@ -1,4 +1,5 @@
-#Determine how pitch corrections change versus injection vertical position (y)
+#Determine how pitch corrections change versus vetical betatron amplitude
+#Note that the vertical betatron amplitude depends on injection y and injection pitch angle
 #Tom Stuttard (13th Oct 2016) 
 
 import numpy as np
@@ -36,16 +37,15 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
 
   #
-  # Loop over injection y
+  # Loop over vertical betatron amplitudes
   #
 
-  #Injection params
-  injectionYValsMm = range(0.,45.)
+  verticalBetatronAmplitudeValsMm = range(0.,45.)
 
-  for injectionYMm in injectionYValsMm :
+  for verticalBetatronAmplitudeMm in verticalBetatronAmplitudeValsMm :
 
     #
-    # Generate data for this injection y value
+    # Generate data for this vertical betatron amplitude
     #
 
     #Init containers
@@ -62,7 +62,6 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
       tValsNs.append(t)
 
       #Get y
-      verticalBetatronAmplitudeMm = injectionYMm
       y = pitchAnglesOneMuon.verticalBetatronPositionMm(verticalBetatronAmplitudeMm,pitchAnglesOneMuon.verticalBetatronPeriodNs,t)
       yValsMm.append(y)
 
@@ -85,8 +84,8 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #
 
   plt.title('')
-  plt.xlabel('Injection y [mm]')
+  plt.xlabel('Vertical betatron amplitude [mm]')
   plt.ylabel('Pitch correction [ppb]')
-  plt.plot(injectionYValsMm,pitchCorrectionValsPpb,"r-")
+  plt.plot(verticalBetatronAmplitudeValsMm,pitchCorrectionValsPpb,"r-")
   plt.show()
 

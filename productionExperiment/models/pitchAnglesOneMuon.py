@@ -80,6 +80,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #
 
   #Betatron
+  #Vertical betatron ampltiude depends on injection y and injection pitch angle
   verticalBetatronAmplitudeMm = 10. #Max is 45 mm (e.g. max acceptance of storage ring)
 
   #Sim
@@ -136,6 +137,16 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
 
   #
+  # Histogram y
+  #
+
+  plt.xlabel('y [mm]')
+  plt.hist(yValsMm, normed=False, bins=50)
+  plt.show()
+
+
+
+  #
   # Plot pitch angle vs t
   #
 
@@ -151,8 +162,20 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #
 
   plt.xlabel('Pitch angle [deg]')
-  plt.hist(psiValsDeg, normed=False, bins=20)
+  plt.hist(psiValsDeg, normed=False, bins=50)
   plt.show()
+
+
+  #
+  # Plot pitch angle vs y
+  #
+
+  plt.title('')
+  plt.xlabel('y [mm]')
+  plt.ylabel('Pitch angle [deg]')
+  plt.plot(yValsMm,psiValsDeg,"b-")
+  plt.show()
+
 
   #
   # Plot pitch angle squared vs t
