@@ -17,6 +17,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   parser.add_argument('-i','--input-file', type=str, required=True, help='Input ROOT file', dest='inputFile')
   parser.add_argument('-n','--max-events', type=int, required=False, default=-1, help='Max num events to process', dest='maxNumEvents')
   parser.add_argument('-e','--first-event', type=int, required=False, default=0, help='First event to process', dest='firstEvent')
+  parser.add_argument('-s','--event-step', type=int, required=False, default=1, help='Num events to step', dest='eventStep')
   args = parser.parse_args()
 
   #Open input file
@@ -46,11 +47,13 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #Get event tree
   t_event = rh.getFromFile(rootFile,"Garfield/Events")
 
-  #Get number of events to process
-  numEventsToProcess,firstEventNumber,maxEventNumber = gh.getNumEventsToProcess(t_event.GetEntries(),args.maxNumEvents,args.firstEvent)
+  #Get events numbers to process
+  eventNums = gh.getEventNumsToProcess(t_event.GetEntries(),args.maxNumEvents,args.firstEvent,args.eventStep)
+
+  print eventNums
 
   #Loop over events
-  for i_evt in range(firstEventNumber,maxEventNumber) :
+  for i_evt in eventNums :
 
     print "\n\n---------------------------------------------"
     print "Event %i :" % (i_evt)
@@ -120,8 +123,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     else:
       print "No threshold crossings, so not adding to plot"
 
+    mg_shapedSignal.Draw("APL") #Must draw before setting properties for TMultiGraph
     mg_shapedSignal.SetTitle( "Event %i : Shaped signal ; Time [ns] ; Voltage [mV]" % i_evt )
-    mg_shapedSignal.Draw("APL")
+    mg_shapedSignal.GetYaxis().SetRangeUser(-300.,100.) #Fixed scale to makes plots easier to compare
 
     raw_input("Press Enter to continue...")
 
@@ -188,7 +192,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
         g_ionDriftLine.SetLineColor(kGreen)
 
         #Loop over drift points for this electron for this cluster
-        for i_idp in range(0,t_event.electronNumDriftPoints[i_e_evt]) : #Loop over drift point for electron
+        for i_idp in range(0,t_event.ionNumDriftPoints[i_e_evt]) : #Loop over drift point for electron
 
           #Add drift point to plot
           g_ionDriftLine.SetPoint(i_idp, t_event.ionDriftPointX[i_idp_evt], t_event.ionDriftPointY[i_idp_evt])
