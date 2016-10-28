@@ -69,6 +69,10 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     # Report basic info
     #
 
+    trackDCA = abs( t_event.trackOrigin.y() )
+
+    print "  Track y = %f [cm]" % (t_event.trackOrigin.y())
+    print "  Track DCA = %f [cm]" % (trackDCA)
     print "  Num clusters = %i" % (t_event.numClusters)
     print "  Num threshold crossing = %i" % (len(t_event.thresholdCrossingTimes))
     print ""
@@ -227,12 +231,12 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     #Draw the whole thing
     mg_eventDisplay.Draw("APL") #Must draw before setting properties for TMultiGraph
-    mg_eventDisplay.SetTitle( "Event %i : Track, clusters electron and ion drift lines ; x [cm] ; y [cm]" % (i_evt) )
+    mg_eventDisplay.SetTitle( "Event %i : Track, clusters, and electron and ion drift lines ; x [cm] ; y [cm]" % (i_evt) )
     mg_eventDisplay.GetXaxis().SetRangeUser(plotXRange[0],plotXRange[1])
     mg_eventDisplay.GetYaxis().SetRangeUser(plotYRange[0],plotYRange[1])
     mg_eventDisplay.GetYaxis().SetTitleOffset(1.4)
 
-    #Add circle representing straw walls (top-down view corss-section)
+    #Add circle representing straw walls (top-down view cross-section)
     strawOutline = TEllipse(0.,0.,.25,.25); #TODO Get radius from data
     strawOutline.SetFillStyle(-1)
     strawOutline.Draw("same")
