@@ -1,4 +1,6 @@
 #Generic GARFIELD stuff
+#Import into plotters
+#Tom Stuttard
 
 #
 # Helper functions

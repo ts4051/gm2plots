@@ -1,4 +1,5 @@
 #Make overall plots of individual GARFIELD runs
+#Tom Stuttard
 
 from ROOT import TFile, gROOT, TH1F, gStyle, TGraph, TMultiGraph, Double, kRed, kGreen, kBlue, TTree
 import os, argparse, math, sys
@@ -30,6 +31,8 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #
 
   h_numThresholdCrossingsInEvent = TH1F("h_numThresholdCrossingsInEvent",";Num thresholds crossings in event", 6, -0.5, 5.5) 
+
+  h_positiveThresholdCrossingTime = TH1F("h_positiveThresholdCrossingTime",";Positive threshold crossing time [ns]", 100, 0., 200.) 
 
 
   #
@@ -73,11 +76,17 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     h_numThresholdCrossingsInEvent.Fill( len(t_event.thresholdCrossingTimes) )
 
+    if len(t_event.thresholdCrossingTimes) == 2 : #TODO Need to record threshold crossing direction, is what I'm doing here sensible?
+      h_positiveThresholdCrossingTime.Fill( t_event.thresholdCrossingTimes[0] )
+
 
   #
   # Draw plots
   # 
 
   h_numThresholdCrossingsInEvent.Draw()
+  raw_input("Press Enter to continue...")
+
+  h_positiveThresholdCrossingTime.Draw()
   raw_input("Press Enter to continue...")
 

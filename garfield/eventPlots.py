@@ -1,6 +1,7 @@
 #Make plots of individual GARFIELD events
+#Tom Stuttard
 
-from ROOT import TFile, gROOT, TCanvas, gStyle, TGraph, TMultiGraph, Double, kRed, kGreen, kBlue, TTree
+from ROOT import TFile, gROOT, TCanvas, gStyle, TGraph, TMultiGraph, Double, kRed, kGreen, kBlue, kBlack, TTree, TEllipse
 import os, argparse, math, sys
 import RootHelper as rh
 import garfieldHelper as gh
@@ -124,4 +125,112 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     raw_input("Press Enter to continue...")
 
+
+    #
+    # Event display
+    #
+
+    #Create a square canvas for the display
+    canvas = TCanvas()
+    canvas.SetWindowSize(800,800)
+
+    mg_eventDisplay = TMultiGraph()
+
+    #Create top-level graph for drift points (top-down view)
+    g_clusterPointsXY = TGraph(t_event.numClusters)
+    g_clusterPointsXY.SetMarkerStyle(24)
+    g_clusterPointsXY.SetMarkerColor(kBlack)
+    g_clusterPointsXY.SetLineColorAlpha(kBlack,0.999) #Hide line
+
+    #Counters used to know what index to use when getting values from trees
+    #The trees are flat in each event but have substructure due ti clusters, electrons and drift points
+    i_e_evt = 0     #Counter of electrons in clusters in whole event
+    i_edp_evt = 0   #Counter of electron drift points in whole event
+    i_idp_evt = 0   #Counter of ion drift points in whole event
+
+    #Loop over clusters
+    for i_clus in range(0,t_event.numClusters) : 
+
+      #Add cluster point (top-down view) to graph
+      g_clusterPointsXY.SetPoint(i_clus, t_event.clusterPointX[i_clus], t_event.clusterPointY[i_clus])
+
+#TODO plot numElectronsInCluster?
+
+      #Loop over electrons in this cluster
+      for i_e in range(0,t_event.numElectronsInCluster[i_clus]) : 
+
+        #Draw electron drift lines...
+
+        #Create a plot of the drift line points for this cluster electron
+        g_electronDriftLine = TGraph(t_event.electronNumDriftPoints[i_e_evt])
+        g_electronDriftLine.SetMarkerStyle(1)
+        g_electronDriftLine.SetMarkerColorAlpha(kBlue,0.999) #Hide
+        g_electronDriftLine.SetLineStyle(1)
+        g_electronDriftLine.SetLineWidth(1)
+        g_electronDriftLine.SetLineColor(kBlue)
+
+        #Loop over drift points for this electron for this cluster
+        for i_edp in range(0,t_event.electronNumDriftPoints[i_e_evt]) : #Loop over drift point for electron
+
+          #Add drift point to plot
+          g_electronDriftLine.SetPoint(i_edp, t_event.electronDriftPointX[i_edp_evt], t_event.electronDriftPointY[i_edp_evt])
+
+          i_edp_evt += 1
+
+        #Draw ion drift lines...
+
+        #Create a plot of the drift line points from this cluster ion
+        g_ionDriftLine = TGraph(t_event.electronNumDriftPoints[i_e_evt])
+        g_ionDriftLine.SetMarkerStyle(1)
+        g_ionDriftLine.SetMarkerColorAlpha(kGreen,0.999) #Hide
+        g_ionDriftLine.SetLineStyle(1)
+        g_ionDriftLine.SetLineWidth(1)
+        g_ionDriftLine.SetLineColor(kGreen)
+
+        #Loop over drift points for this electron for this cluster
+        for i_idp in range(0,t_event.electronNumDriftPoints[i_e_evt]) : #Loop over drift point for electron
+
+          #Add drift point to plot
+          g_ionDriftLine.SetPoint(i_idp, t_event.ionDriftPointX[i_idp_evt], t_event.ionDriftPointY[i_idp_evt])
+
+          i_idp_evt += 1
+
+        i_e_evt += 1
+        
+        #Add drift lines to multi-graph
+        mg_eventDisplay.Add(g_ionDriftLine)
+        mg_eventDisplay.Add(g_electronDriftLine)
+
+    #Add cluster positions to multi-graph
+    mg_eventDisplay.Add(g_clusterPointsXY)
+
+    #Draw a line representing particle track
+    #Note that this assumes direction is (1,0,0), which presently it is but might need to make more general in future
+    plotXRange = [-0.26,0.26] #[cm]
+    plotYRange = [-0.26,0.26] #[cm]
+    g_track = TGraph(2)
+    g_track.SetPoint(0,plotXRange[0],t_event.trackOrigin.y()) #Extreme -ve x point
+    g_track.SetPoint(1,plotXRange[1],t_event.trackOrigin.y()) #Extreme +ve x point
+    g_track.SetMarkerStyle(1)
+    g_track.SetMarkerColorAlpha(kRed,0.999) #Hide
+    g_track.SetLineStyle(1)
+    g_track.SetLineWidth(1)
+    g_track.SetLineColor(kRed)
+    mg_eventDisplay.Add(g_track)
+
+    #Draw the whole thing
+    mg_eventDisplay.Draw("APL") #Must draw before setting properties for TMultiGraph
+    mg_eventDisplay.SetTitle( "Event %i : Track, clusters electron and ion drift lines ; x [cm] ; y [cm]" % (i_evt) )
+    mg_eventDisplay.GetXaxis().SetRangeUser(plotXRange[0],plotXRange[1])
+    mg_eventDisplay.GetYaxis().SetRangeUser(plotYRange[0],plotYRange[1])
+    mg_eventDisplay.GetYaxis().SetTitleOffset(1.4)
+
+    #Add circle representing straw walls (top-down view corss-section)
+    strawOutline = TEllipse(0.,0.,.25,.25); #TODO Get radius from data
+    strawOutline.SetFillStyle(-1)
+    strawOutline.Draw("same")
+    
+    canvas.Update()
+
+    raw_input("Press Enter to continue...")
 
