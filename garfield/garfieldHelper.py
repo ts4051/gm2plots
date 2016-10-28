@@ -2,7 +2,7 @@
 #Import into plotters
 #Tom Stuttard
 
-import math
+import math, sys
 import numpy as np
 
 #
@@ -45,4 +45,32 @@ def dumpRunInfo(t_runInfo) :
   #TODO particle name
   print "  Track momentum = %f [GeV]" % (t_runInfo.trackMomentum/1.e9) #eV -> GeV
   print ""
+
+
+#Check track params
+#Plotters make some assumptions so want to confim they are valid
+def checkTrack(trackTime,trackOrigin,trackDirection) :
+
+  tolerance = 1.e-6
+
+  #Track time should be 0 ns
+  if trackTime > tolerance :
+    print "Track time = %f ns, expected 0 ns" % (trackTime)
+    sys.exit(-1)
+
+  #Track origin should be to the left of the straw, and in the plane z = 0 
+  if trackOrigin.x() < -0.25 : #To the left of the straw
+    print "Track origin not to left of straw"
+    sys.exit(-1)
+
+  if abs(trackOrigin.z()) > tolerance :
+    print "Track origin not in z = 0 plane"
+    sys.exit(-1)
+
+  #Track direction should be +x 
+  if abs(trackDirection.x()-1.) > tolerance or \
+     abs(trackDirection.y()) > tolerance or \
+     abs(trackDirection.z()) > tolerance :
+    print "Track not travelling in +x"
+    sys.exit(-1)
 

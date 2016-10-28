@@ -70,6 +70,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     #Step tree to current event
     t_event.GetEntry(i_evt)
 
+    #Check the track
+    gh.checkTrack(t_event.trackTime, t_event.trackOrigin, t_event.trackDirection)
+
 
     #
     # Fill plots
@@ -77,8 +80,13 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     h_numThresholdCrossingsInEvent.Fill( len(t_event.thresholdCrossingTimes) )
 
+    #TODO Investigate cases with single threshold crossing
+
     if len(t_event.thresholdCrossingTimes) == 2 : #TODO Need to record threshold crossing direction, is what I'm doing here sensible?
       h_positiveThresholdCrossingTime.Fill( t_event.thresholdCrossingTimes[0] )
+
+    if len(t_event.thresholdCrossingTimes) == 2 : #TODO Need to record threshold crossing direction, is what I'm doing here sensible?
+      h_dcaForHit.Fill( t_event. )
 
 
   #

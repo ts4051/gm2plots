@@ -61,6 +61,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     #Step tree to current event
     t_event.GetEntry(i_evt)
 
+    #Check the track
+    gh.checkTrack(t_event.trackTime, t_event.trackOrigin, t_event.trackDirection)
+
 
     #
     # Report basic info
