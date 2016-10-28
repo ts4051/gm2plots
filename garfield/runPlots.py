@@ -35,6 +35,10 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   h_positiveThresholdCrossingTime = TH1F("h_positiveThresholdCrossingTime",";Positive threshold crossing time [ns]", 100, 0., 200.) 
 
+  h_dcaTracks = TH1F("h_dcaTracks","Track Distance of Closest Approach;DCA [cm]", 25, 0., 0.25) 
+
+  h_dcaTriggers = TH1F("h_dcaTriggers","Distance of Closest Approach for tricks causing hits;DCA [cm]", 25, 0., 0.25) 
+
 
   #
   # Run info
@@ -78,20 +82,32 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     # Fill plots
     #
 
+    #Num times the ASDQ threshold was crossed 
     h_numThresholdCrossingsInEvent.Fill( len(t_event.thresholdCrossingTimes) )
 
     #TODO Investigate cases with single threshold crossing
 
+    #Threshold crossing time (first edge only)
     if len(t_event.thresholdCrossingTimes) == 2 : #TODO Need to record threshold crossing direction, is what I'm doing here sensible?
       h_positiveThresholdCrossingTime.Fill( t_event.thresholdCrossingTimes[0] )
 
-    if len(t_event.thresholdCrossingTimes) == 2 : #TODO Need to record threshold crossing direction, is what I'm doing here sensible?
-      h_dcaForHit.Fill( t_event. )
+    #Track DCA to wire origin (assumes wire at (0,0,0) and track going in +x (enforced by "checkTrack" above)
+    dca = abs( t_event.trackOrigin.y() )
+    h_dcaTracks.Fill( dca ) #Select only events triggering electronics #TODO What about 1 edge?
+    if len(t_event.thresholdCrossingTimes) == 2 : h_dcaTriggers.Fill( dca ) #Select only events triggering electronics #TODO What about 1 edge?
 
 
   #
   # Draw plots
   # 
+
+  #Combine DCA histograms on same plot
+  h_dcaTracks.SetLineColor(kBlue)
+  h_dcaTracks.Draw()
+  h_dcaTracks.SetMinimum(0.)
+  h_dcaTriggers.SetLineColor(kRed)
+  h_dcaTriggers.Draw("same")
+  raw_input("Press Enter to continue...")
 
   h_numThresholdCrossingsInEvent.Draw()
   raw_input("Press Enter to continue...")

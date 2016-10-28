@@ -26,7 +26,7 @@ def getEventNumsToProcess(numEventsInFile,maxNumEventsFromUser,firstEventFromUse
     numEventsToProcess = min(numEventsInSteps,maxNumEventsFromUser)
 
   #Report
-  print "Total events = %i : Processing first %i events starting at event %i in steps of %i" \
+  print "Total events = %i : Processing %i events starting at event %i in steps of %i" \
     % (numEventsInFile,numEventsToProcess,firstEventFromUser,eventStepSizeFromUser) 
 
   #Get maximum event number to process given args
