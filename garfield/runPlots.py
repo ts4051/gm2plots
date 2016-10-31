@@ -1,0 +1,117 @@
+#Make overall plots of individual GARFIELD runs
+#Tom Stuttard
+
+from ROOT import TFile, gROOT, TH1F, gStyle, TGraph, TMultiGraph, Double, kRed, kGreen, kBlue, TTree
+import os, argparse, math, sys
+import RootHelper as rh
+import garfieldHelper as gh
+
+#
+# Main function
+#
+
+if __name__ == "__main__" : #Only run if this script is the one execued (not imported)
+
+  #Get args
+  parser = argparse.ArgumentParser(description='')
+  parser.add_argument('-i','--input-file', type=str, required=True, help='Input ROOT file', dest='inputFile')
+  parser.add_argument('-n','--max-events', type=int, required=False, default=-1, help='Max num events to process', dest='maxNumEvents')
+  parser.add_argument('-e','--first-event', type=int, required=False, default=0, help='First event to process', dest='firstEvent')
+  parser.add_argument('-s','--event-step', type=int, required=False, default=1, help='Num events to step', dest='eventStep')
+  args = parser.parse_args()
+
+  #Open input file
+  rootFile = rh.openFile(args.inputFile)
+  if not rootFile : sys.exit(-1)
+
+  #Init plotting
+  gStyle.SetOptStat(0)
+
+  #
+  # Book histos
+  #
+
+  h_numThresholdCrossingsInEvent = TH1F("h_numThresholdCrossingsInEvent",";Num thresholds crossings in event", 6, -0.5, 5.5) 
+
+  h_positiveThresholdCrossingTime = TH1F("h_positiveThresholdCrossingTime",";Positive threshold crossing time [ns]", 100, 0., 200.) 
+
+  h_dcaTracks = TH1F("h_dcaTracks","Track Distance of Closest Approach;DCA [cm]", 25, 0., 0.25) 
+
+  h_dcaTriggers = TH1F("h_dcaTriggers","Distance of Closest Approach for tricks causing hits;DCA [cm]", 25, 0., 0.25) 
+
+
+  #
+  # Run info
+  #
+
+  #Get run info tree
+  t_runInfo = rh.getFromFile(rootFile,"Garfield/RunInfo")
+  t_runInfo.GetEntry(0) #Only one entry
+
+  #Dump some print
+  gh.dumpRunInfo(t_runInfo)
+
+
+  #
+  # Event loop
+  #
+
+  #Get event tree
+  t_event = rh.getFromFile(rootFile,"Garfield/Events")
+
+  #Get events numbers to process
+  eventNums = gh.getEventNumsToProcess(t_event.GetEntries(),args.maxNumEvents,args.firstEvent,args.eventStep)
+
+  #Plot raw signal for this event #TODO REMOVE
+  #t_event.Draw("rawSignalCurrent:rawSignalTime")
+  #raw_input("Press Enter to continue...")
+
+  #Loop over events
+  for i_evt in eventNums :
+
+    if i_evt % 100 == 0 : print "Event %i" % (i_evt) #TODO % done instead
+
+    #Step tree to current event
+    t_event.GetEntry(i_evt)
+
+    #Check the track
+    gh.checkTrack(t_event.trackTime, t_event.trackOrigin, t_event.trackDirection)
+
+
+    #
+    # Fill plots
+    #
+
+    #Num times the ASDQ threshold was crossed 
+    h_numThresholdCrossingsInEvent.Fill( len(t_event.thresholdCrossingTimes) )
+
+    #TODO Investigate cases with single threshold crossing
+
+    #Threshold crossing time (first edge only)
+    if len(t_event.thresholdCrossingTimes) == 2 : #TODO Need to record threshold crossing direction, is what I'm doing here sensible?
+      h_positiveThresholdCrossingTime.Fill( t_event.thresholdCrossingTimes[0] )
+
+    #Track DCA to wire origin (assumes wire at (0,0,0) and track going in +x (enforced by "checkTrack" above)
+    dca = abs( t_event.trackOrigin.y() )
+    h_dcaTracks.Fill( dca ) #Select only events triggering electronics #TODO What about 1 edge?
+    if len(t_event.thresholdCrossingTimes) == 2 : h_dcaTriggers.Fill( dca ) #Select only events triggering electronics #TODO What about 1 edge?
+
+
+  #
+  # Draw plots
+  # 
+
+  #Combine DCA histograms on same plot
+  h_dcaTracks.SetLineColor(kBlue)
+  h_dcaTracks.Draw()
+  h_dcaTracks.SetMinimum(0.)
+  h_dcaTriggers.SetLineColor(kRed)
+  h_dcaTriggers.Draw("same")
+  raw_input("Press Enter to continue...")
+
+  h_numThresholdCrossingsInEvent.Draw()
+  raw_input("Press Enter to continue...")
+
+  h_positiveThresholdCrossingTime.Draw()
+  raw_input("Press Enter to continue...")
+
