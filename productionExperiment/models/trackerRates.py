@@ -49,10 +49,16 @@ def getLBEventSize(numHitWordsInTDC) :
   return numWords,numBits
 
 
-def getAMC13EventSize(numHitWordsInTDC) :
+def getAMCEventSize(numHitWordsInTDC) :
   numWordsInLBEvent,numBitsInLBEvent = getLBEventSize(numHitWordsInTDC)
   numWordsInFC7Event = ( ( numWordsInLBEvent + numWordsInLBChannelHeader ) * numLBsPerFC7 ) + numWordsInFC7EventHeader + numWordsInFC7DDR3Padding #32-bit
   numWordsInAMCEvent = numWordsInAMCHeaderAndFooter + numWordsInAMCPayloadBlockHeader + math.ceil(float(numWordsInFC7Event)/2.) #64-bit
+  numBitsInAMCEvent = numWordsInAMCEvent * amc13WordSize
+  return numWordsInAMCEvent, numBitsInAMCEvent
+
+
+def getAMC13EventSize(numHitWordsInTDC) :
+  numWordsInAMCEvent,numBitsInAMCEvent = getAMCEventSize(numHitWordsInTDC) #64-bit
   numWordsInAMC13Event = numWordsInAMCHeaderAndFooter + numWordsInAMC13PayloadBlockHeaderAndFooter + ( numWordsInAMCEvent * numFC7sPerStation * numStations )
   numBitsInAMC13Event = numWordsInAMC13Event * amc13WordSize
   return numWordsInAMC13Event, numBitsInAMC13Event
@@ -80,8 +86,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   #DAQ
   tdcBufferSize = 2016
-  sendSpeedUTCABackplaneBitPerS = 5.e9 #FC7 -> AMC13
-  sendSpeed8B10BBitPerS = 100.e6 #LB -> FC7
+  fiberDAQLinkToPCSendSpeedBitPerS = 1.e9 #AMC13 -> PC #TODO 5? 10?
+  uTCABackplaneSendSpeedBitPerS = 5.e9 #FC7 -> AMC13
+  fiber8b10bSendSpeedBitPerS = 100.e6 #LB -> FC7
   accumulationDurationMs = 2.
   bothEdges = False
 
@@ -130,18 +137,48 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #Loop over buffer filling value
   for percentFilled in np.arange(0.,110.,10.) :
 
+    #Generate TDC buffer size
     numHitsInTDCBuffer = (percentFilled/100.) * float(tdcBufferSize)
+
+    #TDC -> LB send time
+    #TODO
+
+    #LB to FC7 send time (only worry about for one as parallelised)
     numWordsInLBEvent,numBitsInLBEvent = getLBEventSize(numHitsInTDCBuffer) 
-    timeToSendMs = 1.e3 * float(numBitsInLBEvent) / float(sendSpeed8B10BBitPerS)
-    fillTimeMs = accumulationDurationMs + timeToSendMs 
+    lbEventSendTimeMs = 1.e3 * float(numBitsInLBEvent) / float(fiber8b10bSendSpeedBitPerS)
+
+    #FC7 to AMC13 send time (only worry about for one as parallelised)
+    numWordsInAMCEvent,numBitsInAMCEvent = getAMCEventSize(numHitsInTDCBuffer)
+    amcEventSendTimeMs = 1.e3 * float(numBitsInAMCEvent) / float(uTCABackplaneSendSpeedBitPerS)
+
+    #Overall time taken from trigger to event in AMC13 (where buffering occurs)
+    #TODO Consider processing time in boards?
+    triggerToEventInAMC13TimeMs = accumulationDurationMs + lbEventSendTimeMs + amcEventSendTimeMs
 
     print ""
     print "  TDC buffer filling = %f %% (%i hit words per TDC):"% (percentFilled,numHitsInTDCBuffer)
 
-    print "    8b10b send time (per LB but parallelised) = %f ms for %i LB words" % (timeToSendMs,numWordsInLBEvent)
-    print "    Min time for one fill in electronics (fill length + 8b10b copy) = %f ms" % (fillTimeMs)
+    print ""
 
-    numWordsInAMC13Event, numBitsInAMC13Event = getAMC13EventSize(numHitsInTDCBuffer)
+    print "    LB event to FC7 send time (fiber 8b/10b) = %f ms (%i 32-bit words)" % (lbEventSendTimeMs,numWordsInLBEvent)
+    print "    FC7/AMC event to AMC13 send time (uTCA backplane) = %f ms (%i 64-bit words)" % (lbEventSendTimeMs,numWordsInAMCEvent)
+    print "    Time from trigger to data in AMC13 buffer (includes fill length) = %f ms" % (triggerToEventInAMC13TimeMs)
+
+    print ""
+
+    #Also add data send to PC time (not part of bottleneck due to buffering but still relevent)
+    numWordsInAMC13Event,numBitsInAMC13Event = getAMC13EventSize(numHitsInTDCBuffer)
+    amc13EventSendTimeMs = 1.e3 * float(numBitsInAMCEvent) / float(fiberDAQLinkToPCSendSpeedBitPerS)
+
+    #Overall time taken from trigger to event in PC (ignoring buffering)
+    triggerToEventInPCTimeMs = triggerToEventInAMC13TimeMs + amc13EventSendTimeMs
+
+    print "    AMC13 event to PC send time (DAQ fiber) = %f ms (%i 64-bit words)" % (amc13EventSendTimeMs,numWordsInAMC13Event)
+    print "    Time from trigger to data in PC (includes fill length) = %f ms" % (triggerToEventInPCTimeMs)
+
+    print ""
+
+    #Alternatively thnk about avereage bit rate from AMC13 to PC
     averageAMC13DataRateBitsPerS = numBitsInAMC13Event * averageNumFillsPerS
 
     print "    Total tracker data volume = %i [64-bit words] = %i [Mb]" % (numWordsInAMC13Event,numWordsInAMC13Event*amc13WordSize*1.e-6)
