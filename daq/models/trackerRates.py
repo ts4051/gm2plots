@@ -94,10 +94,16 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   #DAQ
   tdcBufferSize = 2016
-  tdcToLBDataRateBitPerS = 2.5e6 * 8. #8b/10b, 25Mbps of raw data and 2.5MBytes/s of real data
-  lbToFC7DataRateBitPerS = 12.5e6 * 8. #8b/10b via fiber, 125Mbps of raw data and 12.5MBytes/s of real data
-  amcToAMC13DataRateBitPerS = 5.e9 #8b10/10b via uTCA backplane, 5Gbit
-  amc13ToPCDataRateBitPerS = 5.e9 #GbEth fiber DAQ link from AMC13 to PC
+  fractionOfRawThatIsData8b10b = 8./10. #2 bits in every 10 are used for DC balancing rather than data sending
+  fractionOfRawThatIsDataTcpIp = 1460. / 1500. #TCP/IP, max data size in packet is 1460 bytes, with 40 bytes of header per packet (http://packetpushers.net/tcp-over-ip-bandwidth-overhead/)
+  tdcToLBRawRateBitPerS = 25.e6 #8b10b via feedthrough board, 25 Mbps of raw data
+  lbToFC7RawRateBitPerS = 125.e6 #8b10b via fiber, 125 Mbps of raw data
+  amcToAMC13RawRateBitPerS = 5.e9 #8b10b via uTCA backplane, 5 Gbit of raw data
+  amc13ToPCRawRateBitPerS = 5.e9 #GbEth fiber DAQ link from AMC13 to PC
+  tdcToLBDataRateBitPerS = tdcToLBRawRateBitPerS * fractionOfRawThatIsData8b10b #8b10b data rate from raw rate
+  lbToFC7DataRateBitPerS = lbToFC7RawRateBitPerS * fractionOfRawThatIsData8b10b #8b10b data rate from raw rate
+  amcToAMC13DataRateBitPerS = amcToAMC13RawRateBitPerS * fractionOfRawThatIsData8b10b #8b10b data rate from raw rate
+  amc13ToPCDataRateBitPerS = amc13ToPCRawRateBitPerS * fractionOfRawThatIsDataTcpIp #TCP/IP data rate from raw rate
   accumulationDurationMs = 2.
   bothEdges = False
 
@@ -106,10 +112,10 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   print "Params:"
   print "  Accumulation window = %f ms" % (accumulationDurationMs)
   print "  Both edges = %i" % (bothEdges)
-  print "  TDC   -> LB    data rate = %f Mb/s" % (tdcToLBDataRateBitPerS*1.e-6) 
-  print "  LB    -> FC7   data rate = %f Mb/s" % (lbToFC7DataRateBitPerS*1.e-6) 
-  print "  FC7   -> AMC13 data rate = %f Mb/s" % (amcToAMC13DataRateBitPerS*1.e-6) 
-  print "  AMC13 -> PC    data rate = %f Mb/s" % (amc13ToPCDataRateBitPerS*1.e-6) 
+  print "  TDC   -> LB    : Raw rate = %f Mb/s : Data rate = %f Mb/s" % (tdcToLBRawRateBitPerS*1.e-6,tdcToLBDataRateBitPerS*1.e-6) 
+  print "  LB    -> FC7   : Raw rate = %f Mb/s : Data rate = %f Mb/s" % (lbToFC7RawRateBitPerS*1.e-6,lbToFC7DataRateBitPerS*1.e-6) 
+  print "  FC7   -> AMC13 : Raw rate = %f Mb/s : Data rate = %f Mb/s" % (amcToAMC13RawRateBitPerS*1.e-6,amcToAMC13DataRateBitPerS*1.e-6) 
+  print "  AMC13 -> PC    : Raw rate = %f Mb/s : Data rate = %f Mb/s" % (amc13ToPCRawRateBitPerS*1.e-6,amc13ToPCDataRateBitPerS*1.e-6) 
   print ""
 
 
@@ -187,9 +193,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     print ""
 
-    print "    TDC event to LB send time (8b/10b) = %f ms (%i 32-bit words)" % (tdcEventSendTimeMs,numWordsInTDCEvent)
-    print "    LB event to FC7 send time (fiber 8b/10b) = %f ms (%i 32-bit words)" % (lbEventSendTimeMs,numWordsInLBEvent)
-    print "    FC7/AMC event to AMC13 send time (uTCA backplane) = %f ms (%i 64-bit words)" % (amcEventSendTimeMs,numWordsInAMCEvent)
+    print "    TDC event to LB send time (feed-thru board 8b10b) = %f ms (%i 32-bit words)" % (tdcEventSendTimeMs,numWordsInTDCEvent)
+    print "    LB event to FC7 send time (fiber 8b10b) = %f ms (%i 32-bit words)" % (lbEventSendTimeMs,numWordsInLBEvent)
+    print "    FC7/AMC event to AMC13 send time (uTCA backplane 8b10b) = %f ms (%i 64-bit words)" % (amcEventSendTimeMs,numWordsInAMCEvent)
     print "    AMC13 event to PC send time (DAQ fiber) = %f ms (%i 64-bit words)" % (amc13EventSendTimeMs,numWordsInAMC13Event)
 
     print ""
