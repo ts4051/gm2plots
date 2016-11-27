@@ -64,15 +64,17 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #
 
   #Plot data volume vs max event rate
+  plt.figure(facecolor='white')
   plt.title('')
-  plt.xlabel('Event size [bytes]')
+  plt.xlabel('Event size [MB]')
   plt.ylabel('Mean event processing time [ms]')
   plt.plot(eventSizeMB,meanEventTimeMs,"b-")
   plt.show()
 
   #Plot data volume vs max event rate
+  plt.figure(facecolor='white')
   plt.title('')
-  plt.xlabel('Event size [bytes]')
+  plt.xlabel('Event size [MB]')
   plt.ylabel('Max event rate [Hz]')
   plt.plot(eventSizeMB,meanEventRateHz,"b-")
   fillRateHz = 12.
@@ -80,8 +82,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   plt.show()
 
   #Plot data volume vs max data rate
+  plt.figure(facecolor='white')
   plt.title('')
-  plt.xlabel('Event size [bytes]')
+  plt.xlabel('Event size [MB]')
   plt.ylabel('Max data rate [Mbps]')
   plt.plot(eventSizeMB,meanDataRateMbps,"b-")
   plt.show()

@@ -63,12 +63,14 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #
 
   #Plot all event time points
+  plt.figure(facecolor='white')
   plt.title('')
   plt.xlabel('Event num')
   plt.ylabel('Event time taken [ms]')
   plt.plot(eventTimeTakenMs,"b-")
   plt.show()
 
+  plt.figure(facecolor='white')
   plt.title('')
   plt.xlabel('Event time taken [ms]')
   plt.hist(eventTimeTakenMs, normed=False, bins=50)
