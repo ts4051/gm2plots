@@ -1,5 +1,4 @@
-#Plot data from SoftwareSpeedTest.py script outputfile
-#Using AMC13 fake data mode to select data volume, so this only tests the AMC13->PC link and DAQ software, not the underlying boards
+#Plot data from SoftwareSpeedScan.py script output file
 #Tom Stuttard (23rd Nov 2016) 
 
 import numpy as np
@@ -14,7 +13,7 @@ import csv
 def parseInputFile(inputFile) :
 
   #CSV file : Columns...
-  #Fake payload size [64-bit words], Event size [64-bit words], Event size [MB], Event time taken [ms]
+  #Fake payload size [64-bit words], Event size [64-bit words], Event size [MB], Mean event time [ms], Mean event rate [Hz], Mean data rate [Mbps]
   
   #Open file
   with open(inputFile, 'rb') as csvfile :
@@ -26,17 +25,19 @@ def parseInputFile(inputFile) :
     payloadNumWords = list()
     eventNumWords = list()
     eventSizeMB = list()
-    eventTimeTakenMs = list()
+    meanEventTimeMs = list()
     meanEventRateHz = list()
     meanDataRateMbps = list()
     for row in parsedFile:
       payloadNumWords.append( int(row[0]) )
       eventNumWords.append( int(row[1]) )
       eventSizeMB.append( float(row[2]) )
-      eventTimeTakenMs.append( float(row[3]) )
+      meanEventTimeMs.append( float(row[3]) )
+      meanEventRateHz.append( float(row[4]) )
+      meanDataRateMbps.append( float(row[5]) )
 
     #Return the data containers
-    return payloadNumWords, eventNumWords, eventSizeMB, eventTimeTakenMs
+    return payloadNumWords, eventNumWords, eventSizeMB, meanEventTimeMs, meanEventRateHz, meanDataRateMbps
       
 
 #
@@ -55,23 +56,33 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   args = parser.parse_args()
 
   #Parse file
-  payloadNumWords, eventNumWords, eventSizeMB, eventTimeTakenMs = parseInputFile(args.inputFile)
+  payloadNumWords, eventNumWords, eventSizeMB, meanEventTimeMs, meanEventRateHz, meanDataRateMbps = parseInputFile(args.inputFile)
 
 
   #
   # Make plots
   #
 
-  #Plot all event time points
+  #Plot data volume vs max event rate
   plt.title('')
-  plt.xlabel('Event num')
-  plt.ylabel('Event time taken [ms]')
-  plt.plot(eventTimeTakenMs,"b-")
+  plt.xlabel('Event size [bytes]')
+  plt.ylabel('Mean event processing time [ms]')
+  plt.plot(eventSizeMB,meanEventTimeMs,"b-")
   plt.show()
 
+  #Plot data volume vs max event rate
   plt.title('')
-  plt.xlabel('Event time taken [ms]')
-  plt.hist(eventTimeTakenMs, normed=False, bins=50)
+  plt.xlabel('Event size [bytes]')
+  plt.ylabel('Max event rate [Hz]')
+  plt.plot(eventSizeMB,meanEventRateHz,"b-")
+  fillRateHz = 12.
+  plt.plot( [min(eventSizeMB),max(eventSizeMB)], [fillRateHz,fillRateHz] , "r--") #Add a line showing limit
   plt.show()
 
+  #Plot data volume vs max data rate
+  plt.title('')
+  plt.xlabel('Event size [bytes]')
+  plt.ylabel('Max data rate [Mbps]')
+  plt.plot(eventSizeMB,meanDataRateMbps,"b-")
+  plt.show()
 
