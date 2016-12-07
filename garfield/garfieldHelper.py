@@ -43,7 +43,8 @@ def dumpRunInfo(t_runInfo) :
   print "\nRun info :"
   print "  ASDQ threshold = %f [mV]" % (t_runInfo.asdqThresholdmV)
   #TODO particle name
-  print "  Track momentum = %f [GeV]" % (t_runInfo.trackMomentum/1.e9) #eV -> GeV
+  print "  B field = [%f,%f,%f] [T]" % (t_runInfo.magneticFieldT.x(),t_runInfo.magneticFieldT.y(),t_runInfo.magneticFieldT.z())
+  print "  Wire voltage = %f [V]" % (t_runInfo.wireVoltageV)
   print ""
 
 
