@@ -8,18 +8,23 @@ import RootHelper as rh
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('-i','--input-file', type=str, required=False, default="./truthPlots.root", help='Input ROOT file containing plots from DetectorAcceptancePlots module', dest='inputFile')
 parser.add_argument('-p','--pause-for-plots', action='store_true', help='Pause to allow user to look at each plot', dest='pauseForPlots')
-parser.add_argument('-o','--output-file', type=str, required=False, default="./acceptancePlotsNew.root", help='Output ROOT file name', dest='outputFile')
+parser.add_argument('-o','--output-dir', type=str, required=False, default="./", help='Output directory for images', dest='outputDir')
 args = parser.parse_args()
+
+#Check output directory exists
+if not os.path.isdir(args.outputDir) :
+  print "ERROR: Output directory does not exist : [%s]" % (args.outputDir)
+  sys.exit(-1)
 
 #Open input file
 rootFile = rh.openFile(args.inputFile)
 
 
 #
-# Functions for plotting ratio of two histograms
+# Function for plotting ratio of two histograms
 #
 
-def plotRatioOfTwoHistos(numeratorHist,denominatorHist,title,xtitle,smallestHistScaleFactor=1.) :
+def plotRatioOfTwoHistos(numeratorHist,denominatorHist,imgName,title,xtitle,smallestHistScaleFactor=1.) :
 
   # Get the two histograms
   hn = numeratorHist
@@ -27,10 +32,6 @@ def plotRatioOfTwoHistos(numeratorHist,denominatorHist,title,xtitle,smallestHist
 
   # Find which has the largest value
   numeratorHistoHasLargestValue = True if hn.GetMaximum() > hd.GetMaximum() else False
-
-  # Normalise
-  #hn.Scale( 1. / hn.Integral() )
-  #hd.Scale( 1. / hd.Integral() )
 
   # Define the Canvas
   c = TCanvas("c", "canvas", 800, 800)
@@ -80,7 +81,8 @@ def plotRatioOfTwoHistos(numeratorHist,denominatorHist,title,xtitle,smallestHist
   hr.Sumw2()
   hr.SetStats(0)      # No statistics on lower plot
   hr.Divide(hd)
-  hr.Scale(100.)      # Ratio -> percentage
+  usePercentForRatio = True if hr.GetMaximum() < 1. else False
+  if usePercentForRatio : hr.Scale(100.)      # Ratio -> percentage
   hr.SetMarkerStyle(21)
   hr.Draw("ep")       # Draw the ratio plot
 
@@ -102,7 +104,7 @@ def plotRatioOfTwoHistos(numeratorHist,denominatorHist,title,xtitle,smallestHist
   hd.SetLineWidth(2)
 
   # hs settings
-  if addScaledPlot :
+  if smallestHistScaleFactor != 1. :
     if numeratorHistoHasLargestValue : hs.SetLineColor(kRed)
     else : hs.SetLineColor(kBlue+1)
     hs.SetLineWidth(2)
@@ -113,7 +115,7 @@ def plotRatioOfTwoHistos(numeratorHist,denominatorHist,title,xtitle,smallestHist
   hr.GetXaxis().SetTitle(xtitle)
 
   # Y axis ratio plot settings
-  hr.GetYaxis().SetTitle("ratio (%)")
+  hr.GetYaxis().SetTitle("ratio%s" % (" (%)" if usePercentForRatio else "") ) 
   hr.GetYaxis().SetNdivisions(505)
   hr.GetYaxis().SetTitleSize(20)
   hr.GetYaxis().SetTitleFont(43)
@@ -134,14 +136,20 @@ def plotRatioOfTwoHistos(numeratorHist,denominatorHist,title,xtitle,smallestHist
     binContent = hr.GetBinContent(i_bin)
     if binContent > 0. :
       minNonZeroBinContent = min(binContent,minNonZeroBinContent) 
-  hr.GetYaxis().SetRangeUser(minNonZeroBinContent*0.6,hr.GetMaximum()*1.4)
+  hr.GetYaxis().SetRangeUser(minNonZeroBinContent*0.8,hr.GetMaximum()*1.2)
 
   c.Update()
+
+  c.SaveAs(imgName)
 
   # wait so user can see the plot
   if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 
+
+#
+# Function for plotting efficiency
+#
 
 
 def plotEfficiency(e,imgName,title,xtitle,passedScaleFactor=1.) :
@@ -284,6 +292,7 @@ canvas.SetTopMargin(0.05);
 canvas.SetLeftMargin(0.1);
 canvas.SetRightMargin(0.16);
 canvas.Draw()
+canvas.SaveAs(args.outputDir+"/"+"BeamProfile.eps")
 if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 
@@ -377,18 +386,19 @@ h_trackerProfileECut_scaled.Scale(1./float(numTrackerStations))
 
 #Divide calo profile by tracker profile to optain transfer
 h_trackerToCaloTransfer = h_caloProfileECut_scaled.Clone("h_trackerToCaloTransfer")
-h_trackerToCaloTransfer.Divide(h_trackerProfileECut)
+h_trackerToCaloTransfer.Divide(h_trackerProfileECut_scaled)
 
 #Now draw it
-h_trackerToCaloTransfer.Rebin2D(2,2) #Re-bin to smooth out low stats bins at egdes
+h_trackerToCaloTransfer.Rebin2D(10,10) #Re-bin to smooth out low stats bins at egdes
 h_trackerToCaloTransfer.SetTitle("")
 h_trackerToCaloTransfer.GetXaxis().SetTitleOffset(1.1)
 h_trackerToCaloTransfer.GetYaxis().SetTitleOffset(1.2)
-h_trackerToCaloTransfer.Draw()
+h_trackerToCaloTransfer.Draw("CONT4Z")
 canvas.SetTopMargin(0.05);
 canvas.SetLeftMargin(0.1);
 canvas.SetRightMargin(0.16);
 canvas.Draw()
+canvas.SaveAs(args.outputDir+"/"+"TrackerToCaloBeamProfileTransform.eps")
 if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 
@@ -410,4 +420,16 @@ plotEfficiency(rh.getFromFile(rootFile,"detector_acceptance/tracker/ECut/e_verte
 plotEfficiency(rh.getFromFile(rootFile,"detector_acceptance/tracker/ECut/e_vertex_y"),"TrackerYEfficiency.eps","","y [mm]",8.)
 #plotEfficiency(rh.getFromFile(rootFile,"detector_acceptance/tracker/ECut/e_vertex_az"),"TrackerAzEfficiency.eps","","azimuth [#degree]",8.)
 
+
+#
+# Compare tracker and calo 1D efficiency
+#
+
+caloXDist = rh.getFromFile(rootFile,"detector_acceptance/calo/ECut/e_vertex_x").GetCopyPassedHisto()
+trackerXDist = rh.getFromFile(rootFile,"detector_acceptance/tracker/ECut/e_vertex_x").GetCopyPassedHisto()
+plotRatioOfTwoHistos(caloXDist,trackerXDist,"TrackerToCaloXRatio.eps","","x [mm]")
+
+caloYDist = rh.getFromFile(rootFile,"detector_acceptance/calo/ECut/e_vertex_y").GetCopyPassedHisto()
+trackerYDist = rh.getFromFile(rootFile,"detector_acceptance/tracker/ECut/e_vertex_y").GetCopyPassedHisto()
+plotRatioOfTwoHistos(caloYDist,trackerYDist,"TrackerToCaloYRatio.eps","","y [mm]")
 
