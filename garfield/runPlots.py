@@ -19,6 +19,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   parser.add_argument('-n','--max-events', type=int, required=False, default=-1, help='Max num events to process', dest='maxNumEvents')
   parser.add_argument('-e','--first-event', type=int, required=False, default=0, help='First event to process', dest='firstEvent')
   parser.add_argument('-s','--event-step', type=int, required=False, default=1, help='Num events to step', dest='eventStep')
+  parser.add_argument('-p','--pause-for-plots', action='store_true', help='Pause to allow user to look at each plot', dest='pauseForPlots')
   args = parser.parse_args()
 
   #Open input file
@@ -66,7 +67,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   h_recoDCA = TH1F("h_recoDCA","Reconstructed DCA [mm]", 25, 0., 2.5) 
 
-  h_recoDCAResiduals = TH1F("h_recoDCAResiduals","Reconstructed DCA residual to truth DCA [#mum]", 25, -3.e3, 3.e3) 
+  h_recoDCAResiduals = TH1F("h_recoDCAResiduals","Reconstructed DCA residual to truth DCA [#mum]", 50, -3.e3, 3.e3) 
 
   g_dca_vs_recoDCA = TGraph() 
 
@@ -117,7 +118,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   #Plot raw signal for this event #TODO REMOVE
   #t_event.Draw("rawSignalCurrent:rawSignalTime")
-  #raw_input("Press Enter to continue...")
+  #if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   #Loop over events
   for i_evt in eventNums :
@@ -213,19 +214,22 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
         h_meanGain.Fill(t_event.meanGain[i_e_evt])
         i_e_evt += 1
 
+  print "Done processing files"
+
+
   #
   # Draw plots
   # 
 
   #Gain
   h_electronGain.Draw()
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  h_ionGain.Draw()
-#  raw_input("Press Enter to continue...")
+#  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  h_meanGain.Draw()
-#  raw_input("Press Enter to continue...")
+#  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   #Combine DCA histograms on same plot
   h_dcaTracks.SetLineColor(kBlue)
@@ -234,71 +238,109 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   h_dcaTriggers.SetLineColor(kRed)
   h_dcaTriggers.SetLineStyle(2)
   h_dcaTriggers.Draw("same")
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   p_dca_vs_closestClusterDCA.Draw()
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   h_closestClusterDCAError.Draw()
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   p_dca_vs_closestClusterDCAError.Draw()
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   #h_numThresholdCrossingsInEvent.Draw()
-  #raw_input("Press Enter to continue...")
+  #if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   h_firstCrossingTime.Draw()
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   #h_crossingWidth.Draw()
-  #raw_input("Press Enter to continue...")
+  #if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   p_dca_vs_driftTime.Draw()
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   g_dca_vs_driftTime.SetTitle(";DCA [mm];Drift time [ns]") 
   g_dca_vs_driftTime.SetMarkerStyle(7)
   g_dca_vs_driftTime.Draw("AP") 
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   g_closestClusterDCA_vs_driftTime.SetTitle(";Closest cluster DCA [mm];Drift time [ns]") 
   g_closestClusterDCA_vs_driftTime.SetMarkerStyle(7)
   g_closestClusterDCA_vs_driftTime.Draw("AP") 
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   h_recoDCA.Draw()
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   h_recoDCAResiduals.Draw()
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   g_dca_vs_recoDCA.SetTitle(";DCA [mm];Reconstructed DCA [mm]") 
   g_dca_vs_recoDCA.SetMarkerStyle(7)
   g_dca_vs_recoDCA.Draw("AP") 
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 
 #  h_pathLength.Draw()
-#  raw_input("Press Enter to continue...")
+#  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  g_pathLength_vs_numClusters.SetTitle(";Track path length in gas [mm];Num clusters")
 #  g_pathLength_vs_numClusters.SetMarkerStyle(7)
 #  g_pathLength_vs_numClusters.Draw("AP")
-#  raw_input("Press Enter to continue...")
+#  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  h_numClusters.Draw()
-#  raw_input("Press Enter to continue...")
+#  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  h_clusterDensity.Draw()
-#  raw_input("Press Enter to continue...")
+#  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  h_numElectronsInCluster.Draw()
-#  raw_input("Press Enter to continue...")
+#  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  h_numPrimaryElectrons.Draw()
-#  raw_input("Press Enter to continue...")
+#  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  h_primaryElectronDensity.Draw()
-#  raw_input("Press Enter to continue...")
+#  if args.pauseForPlots : raw_input("Press Enter to continue...")
+
+
+  #
+  # Write to file
+  #
+
+  outputFileName = "runPlots.root"
+  outputFile = TFile(outputFileName,"RECREATE")
+
+  h_electronGain.Write()
+  h_dcaTracks.Write()
+  h_dcaTriggers.Write()
+  p_dca_vs_closestClusterDCA.Write()
+  h_closestClusterDCAError.Write()
+  p_dca_vs_closestClusterDCAError.Write()
+  h_numThresholdCrossingsInEvent.Write()
+  h_firstCrossingTime.Write()
+  p_dca_vs_driftTime.Write()
+  g_dca_vs_driftTime.SetName("g_dca_vs_driftTime") 
+  g_dca_vs_driftTime.Write() 
+  g_closestClusterDCA_vs_driftTime.SetName("g_closestClusterDCA_vs_driftTime") 
+  g_closestClusterDCA_vs_driftTime.Write() 
+  h_recoDCA.Write()
+  h_recoDCAResiduals.Write()
+  g_dca_vs_recoDCA.SetName("g_dca_vs_recoDCA") 
+  g_dca_vs_recoDCA.Write() 
+  h_pathLength.Write()
+  g_pathLength_vs_numClusters.SetName("g_pathLength_vs_numClusters")
+  g_pathLength_vs_numClusters.Write()
+  h_numClusters.Write()
+  h_clusterDensity.Write
+  h_numElectronsInCluster.Write()
+  h_numPrimaryElectrons.Write()
+  h_primaryElectronDensity.Write()
+
+  outputFile.Close()
+
+  print "+++ Done : Output file = %s" % (outputFileName)
 

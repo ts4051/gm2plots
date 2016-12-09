@@ -15,6 +15,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #Get args
   parser = argparse.ArgumentParser(description='')
 #  parser.add_argument('-i','--input-file', type=str, required=True, help='Input ROOT file', dest='inputFile')
+  parser.add_argument('-p','--pause-for-plots', action='store_true', help='Pause to allow user to look at each plot', dest='pauseForPlots')
   args = parser.parse_args()
 
   #Input files list #TODO Make an arg
@@ -37,17 +38,63 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   ]
   '''
 
+  '''
   inputFiles = [ \
-    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/RunGarfieldStrawModel_1000V.root", \
-    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/RunGarfieldStrawModel_1100V.root", \
-    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/RunGarfieldStrawModel_1200V.root", \
-    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/RunGarfieldStrawModel_1300V.root", \
-    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/RunGarfieldStrawModel_1400V.root", \
-    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/RunGarfieldStrawModel_1500V.root", \
-    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/RunGarfieldStrawModel_1600V.root", \
-    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/RunGarfieldStrawModel_1700V.root", \
-    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/RunGarfieldStrawModel_1800V.root" \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/old/RunGarfieldStrawModel_1000V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/old/RunGarfieldStrawModel_1100V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/old/RunGarfieldStrawModel_1200V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/old/RunGarfieldStrawModel_1300V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/old/RunGarfieldStrawModel_1400V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/old/RunGarfieldStrawModel_1500V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/old/RunGarfieldStrawModel_1600V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/old/RunGarfieldStrawModel_1700V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/old/RunGarfieldStrawModel_1800V.root" \
   ]
+  '''
+
+  
+  inputFiles = [ \
+#    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1000V.root", \
+#    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1050V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1100V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1150V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1200V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1250V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1300V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1350V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1400V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1450V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1500V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1550V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1600V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1650V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1700V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1750V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/ethane/RunGarfieldStrawModel_1800V.root" \
+  ]
+  
+  '''
+  inputFiles = [ \
+#    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1000V.root", \
+#    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1050V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1100V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1150V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1200V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1250V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1300V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1350V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1400V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1450V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1500V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1550V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1600V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1650V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1700V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1750V.root", \
+    "/unix/muons/g-2/scratch/tom/sim/garfield/gm2trackerdaq/garfield/c++/data/sr90HVScan/co2/RunGarfieldStrawModel_1800V.root" \
+  ]
+  '''
+
 
 
   #
@@ -112,25 +159,45 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     i_file += 1
 
+  print "+++ Done processing files"
 
   #
   # Draw plots
   # 
 
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   g_gain_vs_wireVoltage.SetTitle(";HV [V];Gain") 
   g_gain_vs_wireVoltage.SetMarkerStyle(7)
   g_gain_vs_wireVoltage.Draw("AP") 
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   g_numHits_vs_wireVoltage.SetTitle(";HV [V];Num hits") 
   g_numHits_vs_wireVoltage.SetMarkerStyle(7)
   g_numHits_vs_wireVoltage.Draw("AP") 
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   g_hitEfficiency_vs_wireVoltage.SetTitle(";HV [V]; Efficiency [%]") 
   g_hitEfficiency_vs_wireVoltage.SetMarkerStyle(7)
   g_hitEfficiency_vs_wireVoltage.Draw("AP") 
-  raw_input("Press Enter to continue...")
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
+
+
+  #
+  # Write to file
+  #
+
+  outputFileName = "hvScanPlots.root"
+  outputFile = TFile(outputFileName,"RECREATE")
+
+  g_gain_vs_wireVoltage.SetName("g_gain_vs_wireVoltage")
+  g_gain_vs_wireVoltage.Write()
+
+  g_hitEfficiency_vs_wireVoltage.SetName("g_hitEfficiency_vs_wireVoltage")
+  g_hitEfficiency_vs_wireVoltage.Write()
+
+  outputFile.Close()
+
+  print "+++ Done : Output file = %s" % (outputFileName)
+
 
