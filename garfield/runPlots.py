@@ -46,9 +46,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   timeBinMin = timeCentralBinNs - ( binRangeNs / 2. )
   timeBinMax = timeCentralBinNs + ( binRangeNs / 2. )
 
-  h_electronGain = TH1F("h_electronGain",";Gain for primary electron", 100, 1.e4, 5.e7) 
-  h_ionGain = TH1F("h_ionGain",";Gain for ion", 100, 1.e5, 5.e7) 
-  h_meanGain = TH1F("h_meanGain",";Mean gain", 100, 1.e5, 5.e7) 
+  h_gain = TH1F("h_gain",";Gain for primary electron", 100, 1.e4, 5.e7) 
 
   h_numThresholdCrossingsInEvent = TH1F("h_numThresholdCrossingsInEvent",";Num thresholds crossings in event", 6, -0.5, 5.5) 
 
@@ -143,11 +141,12 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     #Threshold crossing time (first edge only)
     if len(t_event.thresholdCrossingTimes) > 0 : #Check there was a threshold crossing
-      h_firstCrossingTime.Fill( t_event.thresholdCrossingTimes[0] )
+      driftTime = min(t_event.thresholdCrossingTimes) #Drift time is the first crossing
+      h_firstCrossingTime.Fill(driftTime)
 
     #Crossings width
     if len(t_event.thresholdCrossingTimes) == 2 : 
-      crossingWidth = t_event.thresholdCrossingTimes[1] = t_event.thresholdCrossingTimes[0]
+      crossingWidth = max(t_event.thresholdCrossingTimes) - min(t_event.thresholdCrossingTimes)
       h_crossingWidth.Fill( crossingWidth )
 
     #Track DCA to wire origin (assumes wire at (0,0,0) and track going in +x (enforced by "checkTrack" above)
@@ -158,9 +157,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     #Drift time vs DCA
     #Also process reconstructed DCA from drift time using drift velocity
     if len(t_event.thresholdCrossingTimes) > 0 : #Check there was a threshold crossing
-      p_dca_vs_driftTime.Fill( dca*10., t_event.thresholdCrossingTimes[0] )
-      g_dca_vs_driftTime.SetPoint( g_dca_vs_driftTime.GetN(), dca*10., t_event.thresholdCrossingTimes[0] )
-      recoDCACm = getDCAFroMDriftTime(t_event.thresholdCrossingTimes[0])
+      p_dca_vs_driftTime.Fill( dca*10., driftTime )
+      g_dca_vs_driftTime.SetPoint( g_dca_vs_driftTime.GetN(), dca*10., driftTime )
+      recoDCACm = getDCAFroMDriftTime(driftTime)
       recoDCAResidualCm = recoDCACm - dca
       h_recoDCA.Fill( recoDCACm*10. )
       h_recoDCAResiduals.Fill( recoDCAResidualCm*1.e4 )
@@ -202,16 +201,14 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
       h_closestClusterDCAError.Fill(closestClusterDCAError*1.e4)
       p_dca_vs_closestClusterDCAError.Fill(dca*10.,closestClusterDCAError*1.e4)
       if len(t_event.thresholdCrossingTimes) > 0 : #Check there was a threshold crossing
-        g_closestClusterDCA_vs_driftTime.SetPoint( g_closestClusterDCA_vs_driftTime.GetN(), closestClusterDCA*10., t_event.thresholdCrossingTimes[0] )
+        g_closestClusterDCA_vs_driftTime.SetPoint( g_closestClusterDCA_vs_driftTime.GetN(), closestClusterDCA*10., driftTime )
 
     #Gain
     #Loop over clusters and electrons in cluster
     i_e_evt = 0 #Counter of electrons in clusters in whole event
     for i_clus in range(0,t_event.numClusters) : 
       for i_e in range(0,t_event.numElectronsInCluster[i_clus]) : 
-        h_electronGain.Fill(t_event.electronGain[i_e_evt])
-        h_ionGain.Fill(t_event.ionGain[i_e_evt])
-        h_meanGain.Fill(t_event.meanGain[i_e_evt])
+        h_gain.Fill(t_event.gain[i_e_evt])
         i_e_evt += 1
 
   print "Done processing files"
@@ -222,7 +219,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   # 
 
   #Gain
-  h_electronGain.Draw()
+  h_gain.Draw()
   if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  h_ionGain.Draw()
@@ -314,7 +311,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   outputFileName = "runPlots.root"
   outputFile = TFile(outputFileName,"RECREATE")
 
-  h_electronGain.Write()
+  h_gain.Write()
   h_dcaTracks.Write()
   h_dcaTriggers.Write()
   p_dca_vs_closestClusterDCA.Write()
