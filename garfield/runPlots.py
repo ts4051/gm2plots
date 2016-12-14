@@ -2,10 +2,33 @@
 #This is currently not well optimised at all, e.g. looping over same stuff multiple times
 #Tom Stuttard
 
+#Some notes:
+#
+#  "Clusters" in GARFIELD refer to a primary ionisation electron and the subsequent secondary electrons it produces, 
+#  excluding the avalanche (which is handled separately)
+#
+#  "Gain" is the total number of electrons produced for a primary ionisation, including the avalanche
+#
+
 from ROOT import TFile, gROOT, TH1F, TH2F, gStyle, TGraph, TMultiGraph, Double, kRed, kGreen, kBlue, TTree, TProfile
-import os, argparse, math, sys
+import os, argparse, math, sys, random
 import RootHelper as rh
 import garfieldHelper as gh
+from array import *
+
+#Logarithmic bins (https://root.cern.ch/root/roottalk/roottalk06/1213.html)
+def BinLogX(h) :
+  axis = h.GetXaxis()
+  bins = axis.GetNbins()
+  xMin = axis.GetXmin()
+  xMax = axis.GetXmax()
+  width = (xMax - xMin) / bins
+  new_bins = list()
+  for i in range(0,bins+1) : new_bins.append( pow(10, xMin + (i * width) ) )
+  bins_array = array('d',new_bins)
+  axis.Set(bins, bins_array)
+
+
 
 #
 # Main function
@@ -46,7 +69,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   timeBinMin = timeCentralBinNs - ( binRangeNs / 2. )
   timeBinMax = timeCentralBinNs + ( binRangeNs / 2. )
 
-  h_gain = TH1F("h_gain",";Gain for primary electron", 100, 1.e4, 5.e7) 
+  h_electronGain = TH1F("h_electronGain",";Gain for electron (primary or secondary)", 100, 1.e4, 5.e7) 
+
+  h_clusterGain = TH1F("h_clusterGain",";Total gain for all electrons in cluster", 100, 1.e4, 5.e7) 
 
   h_numThresholdCrossingsInEvent = TH1F("h_numThresholdCrossingsInEvent",";Num thresholds crossings in event", 6, -0.5, 5.5) 
 
@@ -77,19 +102,22 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   h_clusterDensity = TH1F("h_clusterDensity",";Num clusters produced per unit path length in gas [/cm]", 100,-0.5,99.5) 
 
-  h_numElectronsInCluster = TH1F("h_numElectronsInCluster",";Num primary electrons in a cluster", 30,-0.5,29.5) 
+  h_numElectronsInCluster_zoom = TH1F("h_numElectronsInCluster_zoom",";Num electrons liberated in a cluster", 30,-0.5,29.5) 
+  h_numElectronsInCluster = TH1F("h_numElectronsInCluster",";Num electrons liberated in a cluster", int(1e4),0,1.e4) 
+  #BinLogX(h_numElectronsInCluster)
 
-  h_numPrimaryElectrons = TH1F("h_numPrimaryElectrons",";Num primary electrons produced by track", 50, 0.,150.) 
+  h_numElectrons = TH1F("h_numElectrons",";Total num electrons liberated by track", 50, 0.,150.) 
 
-  h_primaryElectronDensity = TH1F("h_primaryElectronDensity",";Num primary electrons produced per unit path length in gas [/cm]", 50, 0.,200.) 
-
-  p_dca_vs_closestClusterDCA = TProfile("p_dca_vs_closestClusterDCA",";Track DCA [mm];<DCA of closest cluster> [mm]", 25, 0., 2.5,0.,2.5) 
-
-  h_closestClusterDCAError = TH1F("h_closestClusterDCAError",";DCA error of closest cluster [#mum]", 15, -0.5e3, 1.e3); 
-
-  p_dca_vs_closestClusterDCAError = TProfile("p_dca_vs_closestClusterDCAError",";Track DCA [mm];<DCA error of closest cluster> [#mum]", 25, 0., 2.5, -0.5e3, 1.e3) 
-
-  g_closestClusterDCA_vs_driftTime = TGraph() 
+  numClosestClustersToUse = 3
+  p_dca_vs_closestClusterDCA = list()
+  h_closestClusterDCAError = list()
+  p_dca_vs_closestClusterDCAError = list()
+  g_closestClusterDCA_vs_driftTime = list()
+  for i_closest in range(0,numClosestClustersToUse) :
+    p_dca_vs_closestClusterDCA.append( TProfile("p_dca_vs_closestClusterDCA_%i"%(i_closest),";Track DCA [mm];<DCA of %i'th closest cluster> [mm]"%(i_closest), 25, 0., 2.5,0.,2.5) )
+    h_closestClusterDCAError.append( TH1F("h_closestClusterDCAError_%i"%(i_closest),";DCA error of %i'th closest cluster [#mum]"%(i_closest), 22, -0.1e3, 1.e3) )
+    p_dca_vs_closestClusterDCAError.append( TProfile("p_dca_vs_closestClusterDCAError_%i"%(i_closest),";Track DCA [mm];<DCA error of %i'th closest cluster> [#mum]"%(i_closest), 25, 0., 2.5, -0.5e3, 1.e3) )
+    g_closestClusterDCA_vs_driftTime.append( TGraph() )
 
 
   #
@@ -142,6 +170,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     #Threshold crossing time (first edge only)
     if len(t_event.thresholdCrossingTimes) > 0 : #Check there was a threshold crossing
       driftTime = min(t_event.thresholdCrossingTimes) #Drift time is the first crossing
+      #driftTime = random.gauss(driftTime,2.5) #Test smearing drift time
       h_firstCrossingTime.Fill(driftTime)
 
     #Crossings width
@@ -176,14 +205,13 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     h_clusterDensity.Fill(clusterDensityPerCm)
     #p_dca_vs_clusterDensity.Fill(dca,clusterDensityPerCm)
 
-    #Num primary electrons
-    numPrimaryElectrons = 0
+    #Num liberated electrons
+    numElectrons = 0
     for i_clus in range(0,t_event.numClusters) : 
-      numPrimaryElectrons += t_event.numElectronsInCluster[i_clus]
+      numElectrons += t_event.numElectronsInCluster[i_clus]
+      h_numElectronsInCluster_zoom.Fill(t_event.numElectronsInCluster[i_clus])
       h_numElectronsInCluster.Fill(t_event.numElectronsInCluster[i_clus])
-    h_numPrimaryElectrons.Fill(numPrimaryElectrons)
-    primaryElectronDensityPerCm = numPrimaryElectrons/pathLengthInGasCm
-    h_primaryElectronDensity.Fill(primaryElectronDensityPerCm)
+    h_numElectrons.Fill(numElectrons)
 
     #Resolution
     #Intrinsic resolution (e.g. before electronics effects) is based on how close to DCA the closest cluster is produced
@@ -194,21 +222,24 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
       for i_clus in range(0,t_event.numClusters) : 
         clusterDCA = math.sqrt( math.pow(t_event.clusterPointX[i_clus],2) + math.pow(t_event.clusterPointY[i_clus],2) )
         clusterDCAVals.append(clusterDCA)
-      closestClusterDCA = min(clusterDCAVals)
-      #Now plot how this compares to the true track DCA
-      p_dca_vs_closestClusterDCA.Fill(dca*10.,closestClusterDCA*10.)
-      closestClusterDCAError = closestClusterDCA - dca
-      h_closestClusterDCAError.Fill(closestClusterDCAError*1.e4)
-      p_dca_vs_closestClusterDCAError.Fill(dca*10.,closestClusterDCAError*1.e4)
-      if len(t_event.thresholdCrossingTimes) > 0 : #Check there was a threshold crossing
-        g_closestClusterDCA_vs_driftTime.SetPoint( g_closestClusterDCA_vs_driftTime.GetN(), closestClusterDCA*10., driftTime )
+      clusterDCAVals.sort() #Ascending order
+      for i_closest in range(0,min(numClosestClustersToUse,t_event.numClusters)) :
+        closestClusterDCA = clusterDCAVals[i_closest]
+        #Now plot how this compares to the true track DCA
+        p_dca_vs_closestClusterDCA[i_closest].Fill(dca*10.,closestClusterDCA*10.)
+        closestClusterDCAError = closestClusterDCA - dca
+        h_closestClusterDCAError[i_closest].Fill(closestClusterDCAError*1.e4)
+        p_dca_vs_closestClusterDCAError[i_closest].Fill(dca*10.,closestClusterDCAError*1.e4)
+        if len(t_event.thresholdCrossingTimes) > 0 : #Check there was a threshold crossing
+          g_closestClusterDCA_vs_driftTime[i_closest].SetPoint( g_closestClusterDCA_vs_driftTime[i_closest].GetN(), closestClusterDCA*10., driftTime )
 
     #Gain
     #Loop over clusters and electrons in cluster
     i_e_evt = 0 #Counter of electrons in clusters in whole event
     for i_clus in range(0,t_event.numClusters) : 
+      h_clusterGain.Fill(t_event.clusterGain[i_clus])
       for i_e in range(0,t_event.numElectronsInCluster[i_clus]) : 
-        h_gain.Fill(t_event.gain[i_e_evt])
+        h_electronGain.Fill(t_event.electronGain[i_e_evt])
         i_e_evt += 1
 
   print "Done processing files"
@@ -219,7 +250,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   # 
 
   #Gain
-  h_gain.Draw()
+  h_electronGain.Draw()
   if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 #  h_ionGain.Draw()
@@ -237,15 +268,6 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   h_dcaTriggers.Draw("same")
   if args.pauseForPlots : raw_input("Press Enter to continue...")
 
-  p_dca_vs_closestClusterDCA.Draw()
-  if args.pauseForPlots : raw_input("Press Enter to continue...")
-
-  h_closestClusterDCAError.Draw()
-  if args.pauseForPlots : raw_input("Press Enter to continue...")
-
-  p_dca_vs_closestClusterDCAError.Draw()
-  if args.pauseForPlots : raw_input("Press Enter to continue...")
-
   #h_numThresholdCrossingsInEvent.Draw()
   #if args.pauseForPlots : raw_input("Press Enter to continue...")
 
@@ -261,11 +283,6 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   g_dca_vs_driftTime.SetTitle(";DCA [mm];Drift time [ns]") 
   g_dca_vs_driftTime.SetMarkerStyle(7)
   g_dca_vs_driftTime.Draw("AP") 
-  if args.pauseForPlots : raw_input("Press Enter to continue...")
-
-  g_closestClusterDCA_vs_driftTime.SetTitle(";Closest cluster DCA [mm];Drift time [ns]") 
-  g_closestClusterDCA_vs_driftTime.SetMarkerStyle(7)
-  g_closestClusterDCA_vs_driftTime.Draw("AP") 
   if args.pauseForPlots : raw_input("Press Enter to continue...")
 
   h_recoDCA.Draw()
@@ -297,10 +314,10 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 #  h_numElectronsInCluster.Draw()
 #  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
-#  h_numPrimaryElectrons.Draw()
+#  h_numElectrons.Draw()
 #  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
-#  h_primaryElectronDensity.Draw()
+#  h_clusterDensity.Draw()
 #  if args.pauseForPlots : raw_input("Press Enter to continue...")
 
 
@@ -311,19 +328,15 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   outputFileName = "runPlots.root"
   outputFile = TFile(outputFileName,"RECREATE")
 
-  h_gain.Write()
+  h_electronGain.Write()
+  h_clusterGain.Write()
   h_dcaTracks.Write()
   h_dcaTriggers.Write()
-  p_dca_vs_closestClusterDCA.Write()
-  h_closestClusterDCAError.Write()
-  p_dca_vs_closestClusterDCAError.Write()
   h_numThresholdCrossingsInEvent.Write()
   h_firstCrossingTime.Write()
   p_dca_vs_driftTime.Write()
   g_dca_vs_driftTime.SetName("g_dca_vs_driftTime") 
   g_dca_vs_driftTime.Write() 
-  g_closestClusterDCA_vs_driftTime.SetName("g_closestClusterDCA_vs_driftTime") 
-  g_closestClusterDCA_vs_driftTime.Write() 
   h_recoDCA.Write()
   h_recoDCAResiduals.Write()
   g_dca_vs_recoDCA.SetName("g_dca_vs_recoDCA") 
@@ -334,8 +347,17 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   h_numClusters.Write()
   h_clusterDensity.Write
   h_numElectronsInCluster.Write()
-  h_numPrimaryElectrons.Write()
-  h_primaryElectronDensity.Write()
+  h_numElectronsInCluster_zoom.Write()
+  h_numElectrons.Write()
+  h_clusterDensity.Write()
+
+  for i_closest in range(0,numClosestClustersToUse) :
+    p_dca_vs_closestClusterDCA[i_closest].Write()
+    h_closestClusterDCAError[i_closest].Write()
+    p_dca_vs_closestClusterDCAError[i_closest].Write()
+    g_closestClusterDCA_vs_driftTime[i_closest].SetTitle(";Closest cluster DCA [mm];Drift time [ns]") 
+    g_closestClusterDCA_vs_driftTime[i_closest].SetName("g_closestClusterDCA_vs_driftTime_%i" % (i_closest)) 
+    g_closestClusterDCA_vs_driftTime[i_closest].Write() 
 
   outputFile.Close()
 

@@ -18,6 +18,8 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   parser.add_argument('-n','--max-events', type=int, required=False, default=-1, help='Max num events to process', dest='maxNumEvents')
   parser.add_argument('-e','--first-event', type=int, required=False, default=0, help='First event to process', dest='firstEvent')
   parser.add_argument('-s','--event-step', type=int, required=False, default=1, help='Num events to step', dest='eventStep')
+  parser.add_argument('-pe','--plot-electrons', action='store_true', help='Plot electron drift lines', dest='plotElectronDriftLines')
+  parser.add_argument('-pi','--plot-ions', action='store_true', help='Plot ion drift lines', dest='plotIonDriftLines')
   args = parser.parse_args()
 
   #Open input file
@@ -39,6 +41,10 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   #Dump some print
   gh.dumpRunInfo(t_runInfo)
 
+  #Get num events the event display info was dumped for
+  nStoredEventDisplays = t_runInfo.nStoredEventDisplays
+  print "Run stored event display info for %i events" % (nStoredEventDisplays)
+  print ""
 
   #
   # Event loop
@@ -48,7 +54,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   t_event = rh.getFromFile(rootFile,"Garfield/Events")
 
   #Get events numbers to process
-  eventNums = gh.getEventNumsToProcess(t_event.GetEntries(),args.maxNumEvents,args.firstEvent,args.eventStep)
+  eventNums = gh.getEventNumsToProcess(nStoredEventDisplays,args.maxNumEvents,args.firstEvent,args.eventStep)
 
   print eventNums
 
@@ -71,11 +77,28 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     trackDCA = abs( t_event.trackOrigin.y() )
 
+
+
+
+
+    '''
+    #TODO REMOVE
+    if len(t_event.thresholdCrossingTimes) < 1 : continue
+    if (trackDCA*10.) < 0.5 : continue
+    if (min(t_event.thresholdCrossingTimes)) > 3. : continue
+    print "DCA = %f : t = %f : N clusters = %i" % (trackDCA*10.,min(t_event.thresholdCrossingTimes),t_event.numClusters)
+    '''
+
+
+
+
+    '''
     print "  Track y = %f [cm]" % (t_event.trackOrigin.y())
     print "  Track DCA = %f [cm]" % (trackDCA)
     print "  Num clusters = %i" % (t_event.numClusters)
     print "  Num threshold crossing = %i" % (len(t_event.thresholdCrossingTimes))
     print ""
+    '''
 
 
     #
@@ -165,52 +188,57 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
       #Add cluster point (top-down view) to graph
       g_clusterPointsXY.SetPoint(i_clus, t_event.clusterPointX[i_clus], t_event.clusterPointY[i_clus])
 
-#TODO plot numElectronsInCluster?
-
       #Loop over electrons in this cluster
       for i_e in range(0,t_event.numElectronsInCluster[i_clus]) : 
 
         #Draw electron drift lines...
+        if args.plotElectronDriftLines :
 
-        #Create a plot of the drift line points for this cluster electron
-        g_electronDriftLine = TGraph(t_event.electronNumDriftPoints[i_e_evt])
-        g_electronDriftLine.SetMarkerStyle(1)
-        g_electronDriftLine.SetMarkerColorAlpha(kBlue,0.999) #Hide
-        g_electronDriftLine.SetLineStyle(1)
-        g_electronDriftLine.SetLineWidth(1)
-        g_electronDriftLine.SetLineColor(kBlue)
+          print "+++ Num clusters = %i : Num electrons in this cluster = %i :  Electron in event counter %i : %i " % (t_event.numClusters,t_event.numElectronsInCluster[i_clus],i_e_evt,len(t_event.electronNumDriftPoints))
 
-        #Loop over drift points for this electron for this cluster
-        for i_edp in range(0,t_event.electronNumDriftPoints[i_e_evt]) : #Loop over drift point for electron
+          #Create a plot of the drift line points for this cluster electron
+          g_electronDriftLine = TGraph(t_event.electronNumDriftPoints[i_e_evt])
+          g_electronDriftLine.SetMarkerStyle(1)
+          g_electronDriftLine.SetMarkerColorAlpha(kBlue,0.999) #Hide
+          g_electronDriftLine.SetLineStyle(1)
+          g_electronDriftLine.SetLineWidth(1)
+          g_electronDriftLine.SetLineColor(kBlue)
 
-          #Add drift point to plot
-          g_electronDriftLine.SetPoint(i_edp, t_event.electronDriftPointX[i_edp_evt], t_event.electronDriftPointY[i_edp_evt])
+          #Loop over drift points for this electron for this cluster
+          for i_edp in range(0,t_event.electronNumDriftPoints[i_e_evt]) : #Loop over drift point for electron
 
-          i_edp_evt += 1
+            #Add drift point to plot
+            g_electronDriftLine.SetPoint(i_edp, t_event.electronDriftPointX[i_edp_evt], t_event.electronDriftPointY[i_edp_evt])
+
+            i_edp_evt += 1
+
+          #Add to multi-graph
+          mg_eventDisplay.Add(g_electronDriftLine)
 
         #Draw ion drift lines...
+        if args.plotIonDriftLines :
 
-        #Create a plot of the drift line points from this cluster ion
-        g_ionDriftLine = TGraph(t_event.electronNumDriftPoints[i_e_evt])
-        g_ionDriftLine.SetMarkerStyle(1)
-        g_ionDriftLine.SetMarkerColorAlpha(kGreen,0.999) #Hide
-        g_ionDriftLine.SetLineStyle(1)
-        g_ionDriftLine.SetLineWidth(1)
-        g_ionDriftLine.SetLineColor(kGreen)
+          #Create a plot of the drift line points from this cluster ion
+          g_ionDriftLine = TGraph(t_event.electronNumDriftPoints[i_e_evt])
+          g_ionDriftLine.SetMarkerStyle(1)
+          g_ionDriftLine.SetMarkerColorAlpha(kGreen,0.999) #Hide
+          g_ionDriftLine.SetLineStyle(1)
+          g_ionDriftLine.SetLineWidth(1)
+          g_ionDriftLine.SetLineColor(kGreen)
 
-        #Loop over drift points for this electron for this cluster
-        for i_idp in range(0,t_event.ionNumDriftPoints[i_e_evt]) : #Loop over drift point for electron
+          #Loop over drift points for this electron for this cluster
+          for i_idp in range(0,t_event.ionNumDriftPoints[i_e_evt]) : #Loop over drift point for electron
 
-          #Add drift point to plot
-          g_ionDriftLine.SetPoint(i_idp, t_event.ionDriftPointX[i_idp_evt], t_event.ionDriftPointY[i_idp_evt])
+            #Add drift point to plot
+            g_ionDriftLine.SetPoint(i_idp, t_event.ionDriftPointX[i_idp_evt], t_event.ionDriftPointY[i_idp_evt])
 
-          i_idp_evt += 1
+            i_idp_evt += 1
 
+          #Add to multi-graph
+          mg_eventDisplay.Add(g_ionDriftLine)
+
+        #Increment electron in event counter
         i_e_evt += 1
-        
-        #Add drift lines to multi-graph
-        mg_eventDisplay.Add(g_ionDriftLine)
-        mg_eventDisplay.Add(g_electronDriftLine)
 
     #Add cluster positions to multi-graph
     mg_eventDisplay.Add(g_clusterPointsXY)
@@ -244,4 +272,6 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     canvas.Update()
 
     raw_input("Press Enter to continue...")
+
+
 
