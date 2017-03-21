@@ -1,7 +1,7 @@
 #Grab plots from runPlots.root and clean up, combine, etc for thesis
 #Tom Stuttard
 
-from ROOT import TFile, gROOT, TH1F, TH2F, gStyle, TGraph, TMultiGraph, Double, kRed, kGreen, kBlue, TTree, TProfile, TCanvas, TF1, TLegend
+from ROOT import TFile, gROOT, TH1F, TH2F, gStyle, TGraph, TMultiGraph, Double, kRed, kGreen, kBlue, TTree, TProfile, TCanvas, TF1, TLegend, kBlack
 import os, argparse, math, sys
 import RootHelper as rh
 import garfieldHelper as gh
@@ -17,7 +17,11 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   parser = argparse.ArgumentParser(description='')
   parser.add_argument('-i','--input-file', type=str, required=True, help='Input ROOT file', dest='inputFile')
   parser.add_argument('-o','--output-dir', type=str, required=False, default="./", help='Output directory', dest='outputDir')
+  parser.add_argument('-v','--high-voltage', type=int, required=False, default=-1, help='High voltage value', dest='highVoltage')
   args = parser.parse_args()
+
+  #Append HV value to file names if one is specified
+  highVoltageString = "_%iV" % args.highVoltage if args.highVoltage > -1 else ""
 
   #Check output directory exists
   if not os.path.isdir(args.outputDir) :
@@ -30,6 +34,29 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   if not rootFile : sys.exit(-1)
 
   numClosestClustersUsed = 3
+
+
+  #
+  # Efficiency
+  #
+
+  gStyle.SetOptStat(0)
+
+  canvas = TCanvas("canvas","",800,600)
+  h_dcaTriggers = rh.getFromFile(rootFile,"h_dcaTriggers")
+  h_efficiency = h_dcaTriggers.Clone("h_efficiency")
+  h_dcaTracks = rh.getFromFile(rootFile,"h_dcaTracks")
+  h_efficiency.Divide(h_dcaTracks)
+  h_efficiency.Scale(100.)
+  h_efficiency.SetTitle(";Track DCA [mm];Efficiency (%)")
+  h_efficiency.SetLineStyle(0)
+  h_efficiency.SetLineColor(kBlack)
+  h_efficiency.Draw()
+  canvas.SetTopMargin(0.05);
+  canvas.SetLeftMargin(0.1);
+  canvas.SetRightMargin(0.16);
+  canvas.Draw()
+  canvas.SaveAs(args.outputDir+"/"+"GarfieldMTestEfficiency"+highVoltageString+".eps")
 
 
   #
@@ -46,7 +73,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   canvas.SetLeftMargin(0.1);
   canvas.SetRightMargin(0.16);
   canvas.Draw()
-  canvas.SaveAs(args.outputDir+"/"+"MTestDriftTimes.eps")
+  canvas.SaveAs(args.outputDir+"/"+"GarfieldMTestDriftTimes"+highVoltageString+".eps")
 
 
   #
@@ -72,7 +99,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   canvas.SetLeftMargin(0.1);
   canvas.SetRightMargin(0.05);
   canvas.Draw()
-  canvas.SaveAs(args.outputDir+"/"+"MTestDriftTimeVsDCA.eps")
+  canvas.SaveAs(args.outputDir+"/"+"GarfieldMTestDriftTimeVsDCA"+highVoltageString+".eps")
 
   #Fit it
   fit = TF1("fit", "[0] + [1]*x", 0.5, 2.5)
@@ -124,7 +151,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   canvas.SetLeftMargin(0.1);
   canvas.SetRightMargin(0.05);
   canvas.Draw()
-  canvas.SaveAs(args.outputDir+"/"+"ClosestClusterDCAVsDCA.eps")
+  canvas.SaveAs(args.outputDir+"/"+"GarfieldClosestClusterDCAVsDCA"+highVoltageString+".eps")
 
 
   #
@@ -161,9 +188,8 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   canvas.SetLeftMargin(0.1);
   canvas.SetRightMargin(0.05);
   canvas.Draw()
-  canvas.SaveAs(args.outputDir+"/"+"ClosestClusterDCAError.eps")
-  
-  #TODO Fit "resolution"
+  canvas.SaveAs(args.outputDir+"/"+"GarfieldClosestClusterDCAError"+highVoltageString+".eps")
+ 
 
 
   #
@@ -174,7 +200,15 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   canvas = TCanvas("canvas","",800,600)
   h_recoDCAResiduals = rh.getFromFile(rootFile,"h_recoDCAResiduals")
+
   h_recoDCAResiduals.SetTitle(";Reconstructed track DCA residual to truth [#mum]")
+  h_recoDCAResiduals.Draw()
+
+  canvas.SetTopMargin(0.05);
+  canvas.SetLeftMargin(0.1);
+  canvas.SetRightMargin(0.05);
+  canvas.Draw()
+  canvas.SaveAs(args.outputDir+"/"+"GarfieldRecoDCAResiduals"+highVoltageString+".eps")
 
   f_residuals = TF1("f_recoDCAResiduals", "gaus", -1.5e3, 1.5e3);
   h_recoDCAResiduals.Fit("f_recoDCAResiduals","R")
@@ -182,16 +216,6 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   print ""
   print "+++ Gaussian fit to reco DCA residuals : Sigma = %f [um]" % (fitSigma)
   print ""
-
-  h_recoDCAResiduals.Draw()
-
-  canvas.SetTopMargin(0.05);
-  canvas.SetLeftMargin(0.1);
-  canvas.SetRightMargin(0.05);
-  canvas.Draw()
-  canvas.SaveAs(args.outputDir+"/"+"RecoDCAResiduals.eps")
-  
-  #TODO Fit "resolution"
 
 
   print ""

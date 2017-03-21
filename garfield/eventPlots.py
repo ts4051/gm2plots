@@ -78,40 +78,18 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     trackDCA = abs( t_event.trackOrigin.y() )
 
 
-
-
-
-    '''
-    #TODO REMOVE
-    if len(t_event.thresholdCrossingTimes) < 1 : continue
-    if (trackDCA*10.) < 0.5 : continue
-    if (min(t_event.thresholdCrossingTimes)) > 3. : continue
-    print "DCA = %f : t = %f : N clusters = %i" % (trackDCA*10.,min(t_event.thresholdCrossingTimes),t_event.numClusters)
-    '''
-
-
-
-
-    '''
-    print "  Track y = %f [cm]" % (t_event.trackOrigin.y())
-    print "  Track DCA = %f [cm]" % (trackDCA)
-    print "  Num clusters = %i" % (t_event.numClusters)
-    print "  Num threshold crossing = %i" % (len(t_event.thresholdCrossingTimes))
-    print ""
-    '''
-
-
     #
     # Plot raw signal
     #
 
     numPoints = len(t_event.rawSignalTime)
     g_rawSignal = TGraph(numPoints)
-    g_rawSignal.SetTitle( "Event %i : Raw signal ; Time [ns] ; Current [#mu A]" % i_evt )
+    g_rawSignal.SetTitle( "; Time [ns] ; Current [#muA]" )
   
     for i_pt in range(0,numPoints) :
       g_rawSignal.SetPoint(i_pt,t_event.rawSignalTime[i_pt],t_event.rawSignalCurrent[i_pt])
 
+    g_rawSignal.GetYaxis().SetTitleOffset(1.3)
     g_rawSignal.Draw("APL")
 
     raw_input("Press Enter to continue...")
@@ -154,8 +132,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
       print "No threshold crossings, so not adding to plot"
 
     mg_shapedSignal.Draw("APL") #Must draw before setting properties for TMultiGraph
-    mg_shapedSignal.SetTitle( "Event %i : Shaped signal ; Time [ns] ; Voltage [mV]" % i_evt )
-    mg_shapedSignal.GetYaxis().SetRangeUser(-300.,100.) #Fixed scale to makes plots easier to compare
+    mg_shapedSignal.SetTitle( ";Time [ns] ; Voltage" )
+    #mg_shapedSignal.GetYaxis().SetRangeUser(-300.,100.) #Fixed scale to makes plots easier to compare
+    mg_shapedSignal.GetYaxis().SetLabelSize(0.00001)
 
     raw_input("Press Enter to continue...")
 
@@ -253,7 +232,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     #Draw the whole thing
     mg_eventDisplay.Draw("APL") #Must draw before setting properties for TMultiGraph
-    mg_eventDisplay.SetTitle( "Event %i : Track, clusters, and electron and ion drift lines ; x [cm] ; y [cm]" % (i_evt) )
+    mg_eventDisplay.SetTitle( " ; x [cm] ; y [cm]" )
     mg_eventDisplay.GetXaxis().SetRangeUser(plotXRange[0],plotXRange[1])
     mg_eventDisplay.GetYaxis().SetRangeUser(plotYRange[0],plotYRange[1])
     mg_eventDisplay.GetYaxis().SetTitleOffset(1.4)
