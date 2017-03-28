@@ -60,10 +60,11 @@ def checkTrack(trackTime,trackOrigin,trackDirection) :
     sys.exit(-1)
 
   #Track origin should be to the left of the straw, and in the plane z = 0 
+  '''
   if trackOrigin.x() < -0.25 : #To the left of the straw
     print "Track origin not to left of straw"
     sys.exit(-1)
-
+  '''
   if abs(trackOrigin.z()) > tolerance :
     print "Track origin not in z = 0 plane"
     sys.exit(-1)
