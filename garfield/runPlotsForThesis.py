@@ -48,32 +48,40 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   h_dcaTracks = rh.getFromFile(rootFile,"h_dcaTracks")
   h_efficiency.Divide(h_dcaTracks)
   h_efficiency.Scale(100.)
-  h_efficiency.SetTitle(";Track DCA [mm];Efficiency (%)")
+  h_efficiency.SetTitle(";Track DCA [mm];Efficiency [%]")
   h_efficiency.SetLineStyle(0)
-  h_efficiency.SetLineColor(kBlack)
-  h_efficiency.Draw()
+  h_efficiency.SetLineColor(kRed)
+  h_efficiency.SetLineWidth(2)
+  h_efficiency.GetYaxis().SetTitleOffset(1.3)
+  h_efficiency.Draw("hist")
   canvas.SetTopMargin(0.05);
   canvas.SetLeftMargin(0.1);
   canvas.SetRightMargin(0.16);
   canvas.Draw()
-  canvas.SaveAs(args.outputDir+"/"+"GarfieldMTestEfficiency"+highVoltageString+".eps")
+  canvas.SaveAs(args.outputDir+"/"+"GarfieldEfficiency"+highVoltageString+".eps")
 
 
   #
   # Drift times
   #
 
-  gStyle.SetOptStat(111111)
+  gStyle.SetOptStat(0) #111111)
 
   canvas = TCanvas("canvas","",800,600)
   h_firstCrossingTime = rh.getFromFile(rootFile,"h_firstCrossingTime")
-  h_firstCrossingTime.SetTitle(";Drift time [ns]")
-  h_firstCrossingTime.Draw()
+  h_firstCrossingTime.Rebin(2)
+  h_firstCrossingTime.Scale( 1./float(h_firstCrossingTime.GetEntries()) )
+  h_firstCrossingTime.SetTitle(";Drift time [ns];Normalised counts")
+  h_firstCrossingTime.GetYaxis().SetTitleOffset(1.3)
+  h_firstCrossingTime.SetLineStyle(0)
+  h_firstCrossingTime.SetLineColor(kRed)
+  h_firstCrossingTime.SetLineWidth(2)
+  h_firstCrossingTime.Draw("hist")
   canvas.SetTopMargin(0.05);
   canvas.SetLeftMargin(0.1);
   canvas.SetRightMargin(0.16);
   canvas.Draw()
-  canvas.SaveAs(args.outputDir+"/"+"GarfieldMTestDriftTimes"+highVoltageString+".eps")
+  canvas.SaveAs(args.outputDir+"/"+"GarfieldDriftTimes"+highVoltageString+".eps")
 
 
   #
@@ -90,7 +98,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   g_dca_vs_driftTime.GetXaxis().SetTitle("Track DCA to wire [mm]")
   g_dca_vs_driftTime.GetYaxis().SetTitle("Straw drift time [ns]")
   g_dca_vs_driftTime.GetXaxis().SetRangeUser(0.,2.5)
-  g_dca_vs_driftTime.GetYaxis().SetRangeUser(0.,100.)
+  g_dca_vs_driftTime.GetYaxis().SetRangeUser(0.,90.)
   g_dca_vs_driftTime.SetMarkerStyle(7)
   g_dca_vs_driftTime.Draw("AP")
 
@@ -99,7 +107,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   canvas.SetLeftMargin(0.1);
   canvas.SetRightMargin(0.05);
   canvas.Draw()
-  canvas.SaveAs(args.outputDir+"/"+"GarfieldMTestDriftTimeVsDCA"+highVoltageString+".eps")
+  canvas.SaveAs(args.outputDir+"/"+"GarfieldDriftTimeVsDCA"+highVoltageString+".eps")
 
   #Fit it
   fit = TF1("fit", "[0] + [1]*x", 0.5, 2.5)
@@ -196,13 +204,19 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   # Resolution
   #
 
-  gStyle.SetOptStat(111111)
+  gStyle.SetOptStat(0) #111111)
 
   canvas = TCanvas("canvas","",800,600)
-  h_recoDCAResiduals = rh.getFromFile(rootFile,"h_recoDCAResiduals")
 
-  h_recoDCAResiduals.SetTitle(";Reconstructed track DCA residual to truth [#mum]")
-  h_recoDCAResiduals.Draw()
+  h_recoDCAResiduals = rh.getFromFile(rootFile,"h_recoDCAResiduals")
+  h_recoDCAResiduals.Scale( 1./float(h_recoDCAResiduals.GetEntries()) )
+  h_recoDCAResiduals.SetTitle(";Reconstructed track DCA residual to truth [um];Normalised counts")
+  h_recoDCAResiduals.GetYaxis().SetTitleOffset(1.3)
+  h_recoDCAResiduals.SetLineStyle(0)
+  h_recoDCAResiduals.SetLineColor(kRed)
+  h_recoDCAResiduals.SetLineWidth(2)
+  #h_recoDCAResiduals.GetXaxis().SetRangeUser(-1500.,1500.)
+  h_recoDCAResiduals.Draw("hist")
 
   canvas.SetTopMargin(0.05);
   canvas.SetLeftMargin(0.1);
@@ -214,7 +228,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   h_recoDCAResiduals.Fit("f_recoDCAResiduals","R")
   fitSigma = f_residuals.GetParameter(2)
   print ""
-  print "+++ Gaussian fit to reco DCA residuals : Sigma = %f [um]" % (fitSigma)
+  print "+++ Gaussian fit to reco DCA residuals : Sigma = %0.3g [um] : Histogram RMS = %0.3g" % (fitSigma,h_recoDCAResiduals.GetRMS())
   print ""
 
 

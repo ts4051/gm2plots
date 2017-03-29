@@ -69,6 +69,8 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   timeBinMin = timeCentralBinNs - ( binRangeNs / 2. )
   timeBinMax = timeCentralBinNs + ( binRangeNs / 2. )
 
+  t0Resolution = 2.2 #[ns] for cosmics test stand, https://muon.npl.washington.edu/elog/g2/Straw+detectors/134
+
   h_electronGain = TH1F("h_electronGain",";Gain for electron (primary or secondary)", 100, 1.e4, 5.e7) 
 
   h_clusterGain = TH1F("h_clusterGain",";Total gain for all electrons in cluster", 100, 1.e4, 5.e7) 
@@ -77,6 +79,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
   #h_firstCrossingTime = TH1F("h_firstCrossingTime",";First threshold crossing time [ns]", 100, 0., 100.) 
   h_firstCrossingTime = TH1F("h_firstCrossingTime",";Drift time [ns]", numTimeBins, timeBinMin, timeBinMax) 
+  h_firstCrossingTimeSmeared = TH1F("h_firstCrossingTimeSmeared","t0 resolution = %0.3g [ns];Drift time [ns]"%t0Resolution, numTimeBins, timeBinMin, timeBinMax) 
 
   h_crossingWidth = TH1F("h_crossingWidth",";Time width between first and second threshold crossing [ns]", numTimeBins, timeBinMin, timeBinMax) 
 
@@ -170,8 +173,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     #Threshold crossing time (first edge only)
     if len(t_event.thresholdCrossingTimes) > 0 : #Check there was a threshold crossing
       driftTime = min(t_event.thresholdCrossingTimes) #Drift time is the first crossing
-      #driftTime = random.gauss(driftTime,2.5) #Test smearing drift time
       h_firstCrossingTime.Fill(driftTime)
+      smearedDriftTime = random.gauss(driftTime,t0Resolution) #Try smearing drift time
+      h_firstCrossingTimeSmeared.Fill(smearedDriftTime)
 
     #Crossings width
     if len(t_event.thresholdCrossingTimes) == 2 : 
@@ -274,6 +278,9 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   h_firstCrossingTime.Draw()
   if args.pauseForPlots : raw_input("Press Enter to continue...")
 
+  h_firstCrossingTimeSmeared.Draw()
+  if args.pauseForPlots : raw_input("Press Enter to continue...")
+
   #h_crossingWidth.Draw()
   #if args.pauseForPlots : raw_input("Press Enter to continue...")
 
@@ -334,6 +341,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   h_dcaTriggers.Write()
   h_numThresholdCrossingsInEvent.Write()
   h_firstCrossingTime.Write()
+  h_firstCrossingTimeSmeared.Write()
   p_dca_vs_driftTime.Write()
   g_dca_vs_driftTime.SetName("g_dca_vs_driftTime") 
   g_dca_vs_driftTime.Write() 
