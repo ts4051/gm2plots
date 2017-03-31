@@ -35,7 +35,7 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
     rootFiles[f] = rh.openFile(f)
     h_recoDCAResiduals[f] = rh.getFromFile(rootFiles[f],"h_recoDCAResiduals").Clone("h_recoDCAResiduals%i"%i)
     h_recoDCAResiduals[f].Scale( 1./float(h_recoDCAResiduals[f].GetMaximum()) )
-    h_recoDCAResiduals[f].SetTitle(";Reconstructed track DCA residual to truth [um]; Counts [arb. units]")
+    h_recoDCAResiduals[f].SetTitle(";Reconstructed - true track DCA to wire [um]; Counts [arb. units]")
     h_recoDCAResiduals[f].GetYaxis().SetTitleOffset(0.8)
     h_recoDCAResiduals[f].GetYaxis().SetLabelSize(0.)
     h_recoDCAResiduals[f].SetLineStyle(i+1)

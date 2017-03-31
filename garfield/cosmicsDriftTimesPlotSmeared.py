@@ -18,30 +18,18 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   # Resolution
   #
 
-  filePath = 
-    "/Users/stuttard/physics/gm2/software/offline/gm2plots/garfield/runPlots_cosmics_10kevts.root"  , \
-    "/Users/stuttard/physics/gm2/software/offline/gm2plots/garfield/runPlots_cosmics-0.1GeV_5kevts.root" , \
-    "/Users/stuttard/physics/gm2/software/offline/gm2plots/garfield/runPlots_cosmics-10GeV_5kevts.root"  \
-    ]
+  filePath = "/Users/stuttard/physics/gm2/software/offline/gm2plots/garfield/runPlots_cosmics_5kevts.root"
 
   gStyle.SetOptStat(0) #111111)
 
   canvas = TCanvas("canvas","",800,600)
 
-  rootFiles = dict()
+  rootFile = rh.openFile(filePath)
 
-  i = 0
-  rootFiles[i] = rh.openFile(filePaths[i])
-  h_driftTimes = rh.getFromFile(rootFiles[i],"h_firstCrossingTime").Clone("h_driftTimes%i"%i)
-  i += 1
-  while i < len(filePaths) :
-    rootFiles[i] = rh.openFile(filePaths[i])
-    h_driftTimes.Add( rh.getFromFile(rootFiles[i],"h_firstCrossingTime").Clone("h_driftTimes%i"%i) )
-    i += 1
-
+  h_driftTimes = rh.getFromFile(rootFile,"h_firstCrossingTime").Clone("h_driftTimes")
   h_driftTimes.Rebin(2)
 #    h_driftTimes[f].Scale( 1./float(h_driftTimes[f].GetEntries()) )
-  h_driftTimes.SetTitle(";Drift time [ns];Counts [arb. units]")
+  #h_driftTimes.SetTitle(";Drift time [ns];Counts [arb. units]")
   h_driftTimes.GetYaxis().SetTitleOffset(0.8)
   h_driftTimes.GetYaxis().SetLabelSize(0.)
   h_driftTimes.SetLineStyle(0)
@@ -51,12 +39,24 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   h_driftTimes.Draw("hist")
 
 
+  h_driftTimesSmeared = rh.getFromFile(rootFile,"h_firstCrossingTimeSmeared").Clone("h_driftTimesSmeared")
+  h_driftTimesSmeared.Rebin(2)
+#    h_driftTimesSmeared[f].Scale( 1./float(h_driftTimes[f].GetEntries()) )
+  h_driftTimesSmeared.SetTitle(";Drift time [ns];Counts [arb. units]")
+  h_driftTimesSmeared.GetYaxis().SetTitleOffset(0.8)
+  h_driftTimesSmeared.GetYaxis().SetLabelSize(0.)
+  h_driftTimesSmeared.SetLineStyle(0)
+  h_driftTimesSmeared.SetLineColor(kBlue)
+  h_driftTimesSmeared.SetLineWidth(2)
+  #h_driftTimesSmeared.GetXaxis().SetRangeUser(-1500.,1500.)
+  h_driftTimesSmeared.Draw("hist same")
+
   canvas.SetTopMargin(0.05);
   canvas.SetLeftMargin(0.1);
   canvas.SetRightMargin(0.05);
 
   canvas.Draw()
-  canvas.SaveAs("./GarfieldDriftTimesCosmics"+".eps")
+  canvas.SaveAs("./GarfieldDriftTimesCosmicsSmeared"+".eps")
 
   print "Done"
 

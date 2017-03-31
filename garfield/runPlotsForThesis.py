@@ -65,10 +65,13 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   # Drift times
   #
 
+  driftTimeHistName = "h_firstCrossingTime"
+  driftTimeHistName += "Smeared"
+
   gStyle.SetOptStat(0) #111111)
 
   canvas = TCanvas("canvas","",800,600)
-  h_firstCrossingTime = rh.getFromFile(rootFile,"h_firstCrossingTime")
+  h_firstCrossingTime = rh.getFromFile(rootFile,driftTimeHistName)
   h_firstCrossingTime.Rebin(2)
   h_firstCrossingTime.Scale( 1./float(h_firstCrossingTime.GetEntries()) )
   h_firstCrossingTime.SetTitle(";Drift time [ns];Normalised counts")
@@ -139,9 +142,10 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
 
     p_dca_vs_closestClusterDCA = rh.getFromFile(rootFile,"p_dca_vs_closestClusterDCA_%i"%(i_closest))
     p_dca_vs_closestClusterDCA.SetLineColor(i_closest+1)
+    p_dca_vs_closestClusterDCA.SetLineWidth(3)
     p_dca_vs_closestClusterDCA.SetMarkerColor(i_closest+1)
-    p_dca_vs_closestClusterDCA.SetTitle(";Track DCA [mm];<Cluster DCA> [mm]")
-    p_dca_vs_closestClusterDCA.Draw( "" if i_closest == 0 else "same" )
+    p_dca_vs_closestClusterDCA.SetTitle(";Track DCA to wire [mm];Mean primary ionisation cluster DCA to wire [mm]")
+    p_dca_vs_closestClusterDCA.Draw( "hist" if i_closest == 0 else "hist same" )
 
     legendString = ""
     if i_closest == 0 : legendString = "Closest cluster"
