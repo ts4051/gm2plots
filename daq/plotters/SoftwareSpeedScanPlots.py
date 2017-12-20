@@ -37,7 +37,7 @@ def parseInputFile(inputFile) :
       meanDataRateMbps.append( float(row[5]) )
 
     #Return the data containers
-    return payloadNumWords, eventNumWords, eventSizeMB, meanEventTimeMs, meanEventRateHz, meanDataRateMbps
+    return np.array(payloadNumWords), np.array(eventNumWords), np.array(eventSizeMB), np.array(meanEventTimeMs), np.array(meanEventRateHz), np.array(meanDataRateMbps)
       
 
 #
@@ -69,7 +69,8 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   plt.xlabel('Event size [MB]')
   plt.ylabel('Mean event processing time [ms]')
   plt.plot(eventSizeMB,meanEventTimeMs,"b-")
-  plt.show()
+  plt.legend()
+  plt.grid()
 
   #Plot data volume vs max event rate
   plt.figure(facecolor='white')
@@ -77,9 +78,11 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   plt.xlabel('Event size [MB]')
   plt.ylabel('Max event rate [Hz]')
   plt.plot(eventSizeMB,meanEventRateHz,"b-")
-  fillRateHz = 12.
-  plt.plot( [min(eventSizeMB),max(eventSizeMB)], [fillRateHz,fillRateHz] , "r--") #Add a line showing limit
-  plt.show()
+  plt.axhline(12.,color="red",linestyle="--",label="Experiment fill rate")
+  plt.axvline(1.2/8.,color="green",linestyle="--",label="Expected event size")
+  plt.axvline(12.6/8.,color="magenta",linestyle="--",label="Max event size")
+  plt.legend()
+  plt.grid()
 
   #Plot data volume vs max data rate
   plt.figure(facecolor='white')
@@ -87,5 +90,8 @@ if __name__ == "__main__" : #Only run if this script is the one execued (not imp
   plt.xlabel('Event size [MB]')
   plt.ylabel('Max data rate [Mbps]')
   plt.plot(eventSizeMB,meanDataRateMbps,"b-")
+  plt.legend()
+  plt.grid()
+
   plt.show()
 
